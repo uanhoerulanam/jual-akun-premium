@@ -97,7 +97,6 @@ main { max-width: 920px; margin: 0 auto; padding: 14px 16px 30px; }
 
 .product { border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
 
-/* Poster tampil penuh, tidak terpotong */
 .poster {
   display: block;
   width: 100%;
@@ -107,11 +106,7 @@ main { max-width: 920px; margin: 0 auto; padding: 14px 16px 30px; }
   cursor: zoom-in;
   position: relative;
 }
-.poster img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
+.poster img { display: block; width: 100%; height: auto; }
 .badge {
   position: absolute;
   top: 10px; left: 10px;
@@ -119,6 +114,7 @@ main { max-width: 920px; margin: 0 auto; padding: 14px 16px 30px; }
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
+  color: #fff;
   background: var(--grad);
   box-shadow: 0 4px 12px rgba(180,60,255,.45);
 }
@@ -129,6 +125,7 @@ main { max-width: 920px; margin: 0 auto; padding: 14px 16px 30px; }
   border-radius: 50%;
   background: rgba(5,3,13,.6);
   border: 1px solid var(--line);
+  color: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 15px;
 }
@@ -199,12 +196,50 @@ main { max-width: 920px; margin: 0 auto; padding: 14px 16px 30px; }
 }
 .btn:active { background: rgba(255,255,255,.16); }
 
-/* Info */
-.info { margin-top: 22px; padding: 22px; border-radius: 20px; }
-.info h3 { text-align: center; margin-bottom: 14px; }
-.info ul { list-style: none; display: grid; grid-template-columns: 1fr; gap: 9px; color: var(--muted); font-size: 13px; }
+/* Informasi pemesanan */
+.info { margin-top: 22px; padding: 22px 20px; border-radius: 22px; }
+.info h3 { text-align: center; font-size: 18px; margin-bottom: 16px; }
+.info ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 11px;
+  margin-bottom: 18px;
+}
 @media (min-width: 640px) { .info ul { grid-template-columns: repeat(2, 1fr); } }
-.info li::before { content: "✓ "; color: var(--purple); font-weight: 700; }
+.info li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.info li::before {
+  content: "✓";
+  flex-shrink: 0;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--grad);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+
+.guarantee {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(180,60,255,.5);
+  background: linear-gradient(135deg, rgba(47,107,255,.18), rgba(180,60,255,.18));
+}
+.guarantee .g-ic { font-size: 28px; flex-shrink: 0; }
+.guarantee b { display: block; font-size: 15px; margin-bottom: 2px; }
+.guarantee span { font-size: 13px; color: var(--silver); line-height: 1.5; }
 
 footer { text-align: center; padding: 26px 15px 34px; color: #77749a; font-size: 12px; line-height: 1.7; }
 
@@ -293,6 +328,13 @@ footer { text-align: center; padding: 26px 15px 34px; color: #77749a; font-size:
       <li>Bantuan pelanggan</li>
       <li>Konfirmasi detail paket sebelum pembayaran</li>
     </ul>
+    <div class="guarantee">
+      <div class="g-ic">🛡️</div>
+      <div>
+        <b>100% Amanah</b>
+        <span>Gagal aktivasi, uang 100% dikembalikan.</span>
+      </div>
+    </div>
   </section>
 
 </main>
@@ -308,15 +350,46 @@ footer { text-align: center; padding: 26px 15px 34px; color: #77749a; font-size:
 </div>
 
 <script>
-// GANTI DENGAN NOMOR WHATSAPP ADMIN
-// Gunakan kode negara 62 tanpa tanda +
-const nomorAdmin = "628XXXXXXXXXX";
+// Nomor WhatsApp admin (kode negara 62, tanpa +)
+const nomorAdmin = "6285136446443";
 
 const produk = [
-  { nama: "Wink VIP+ Premium",          img: "wink.jpg",        durasi: "7 Hari",  lama: "Rp31.900",  baru: "Rp5.000", diskon: "Hemat 84%" },
-  { nama: "Alight Motion Premium",      img: "alightmotion.jpg", durasi: "1 Tahun", lama: "Rp119.000", baru: "Rp5.000", diskon: "Hemat 96%" },
-  { nama: "YouTube Premium",            img: "youtube.jpg",     durasi: "1 Bulan", lama: "Rp69.000",  baru: "Rp5.000", diskon: "Hemat 93%" },
-  { nama: "Bstation Premium (Private)", img: "bstation.jpg",    durasi: "7 Hari",  lama: "Rp12.000",  baru: "Rp5.000", diskon: "Hemat 58%" }
+  {
+    nama: "Wink VIP+ Premium",
+    img: "wink.jpg",
+    durasi: "7 Hari",
+    lama: "Rp31.900",
+    baru: "Rp5.000",
+    diskon: "Hemat 84%",
+    pesan: "Halo, Bang! Saya ingin order Wink VIP+ Premium 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  },
+  {
+    nama: "Alight Motion Premium",
+    img: "Alightmotion.jpg",
+    durasi: "1 Tahun",
+    lama: "Rp119.000",
+    baru: "Rp5.000",
+    diskon: "Hemat 96%",
+    pesan: "Halo, Bang. Mau order AM Premium 1 tahun pakai Gmail sendiri, harga 5K."
+  },
+  {
+    nama: "YouTube Premium",
+    img: "youtube.jpg",
+    durasi: "1 Bulan",
+    lama: "Rp69.000",
+    baru: "Rp5.000",
+    diskon: "Hemat 93%",
+    pesan: "Halo, Bang! Saya ingin order YouTube Premium 1 Bulan seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  },
+  {
+    nama: "Bstation Premium (Private)",
+    img: "bstation.jpg",
+    durasi: "7 Hari",
+    lama: "Rp12.000",
+    baru: "Rp5.000",
+    diskon: "Hemat 58%",
+    pesan: "Halo, Bang! Saya ingin order Bstation Premium Private 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  }
 ];
 
 const wadah = document.getElementById("products");
@@ -346,24 +419,8 @@ wadah.addEventListener("click", e => {
   const b = e.target.closest(".buy");
   if (!b) return;
   const p = produk[b.dataset.i];
-  buy(p.nama, p.baru, p.durasi);
+  window.open("https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(p.pesan), "_blank");
 });
-
-function buy(nama, harga, durasi) {
-  const pesan =
-`Halo Admin UAN DIGITAL STORE!
-
-Saya ingin memesan produk:
-
-Produk: ${nama}
-Harga: ${harga}
-Masa aktif: ${durasi}
-
-Pembayaran via QRIS. Mohon konfirmasi ketersediaan.
-
-Terima kasih.`;
-  window.open("https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(pesan), "_blank");
-}
 
 /* Perbesar gambar */
 const lb = document.getElementById("lightbox");
