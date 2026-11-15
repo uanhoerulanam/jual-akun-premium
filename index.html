@@ -14,6 +14,7 @@
   --purple: #b43cff;
   --silver: #f2f4ff;
   --muted: #b4b2d0;
+  --red: #ff2d2d;
   --grad: linear-gradient(90deg, var(--blue), var(--purple));
   --k: 0;
 }
@@ -203,11 +204,22 @@ body {
 
 /* Panel beli */
 .panel { border-radius: 20px; padding: 14px 16px 16px; }
-.row { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-bottom: 12px; }
+.row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 12px; }
+.row > div:first-child { min-width: 0; }
 .row h3 { font-size: 16px; line-height: 1.25; }
 .row small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
-.prices { text-align: right; flex-shrink: 0; }
-.old { display: block; color: #8b88a8; font-size: 12px; text-decoration: line-through; }
+
+/* Harga: DARI (coret) dan JADI */
+.prices { display: grid; gap: 3px; flex-shrink: 0; min-width: 158px; }
+.pr { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.lbl {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .8px;
+  color: var(--red);
+  text-shadow: 0 0 8px rgba(255,45,45,.7);
+}
+.old { color: #8b88a8; font-size: 13px; text-decoration: line-through; }
 .price { font-size: 25px; font-weight: 800; color: #fff; text-shadow: 0 0 16px rgba(255,255,255,.45); line-height: 1.1; }
 
 .buy, .btn {
@@ -444,7 +456,10 @@ function slideProduk(id, first) {
       <div class="panel glass">
         <div class="row">
           <div><h3>${p.nama}</h3><small>Masa aktif ${p.durasi}</small></div>
-          <div class="prices"><span class="old">${p.lama}</span><span class="price">${p.baru}</span></div>
+          <div class="prices">
+            <div class="pr"><span class="lbl">DARI</span><span class="old">${p.lama}</span></div>
+            <div class="pr"><span class="lbl">JADI</span><span class="price">${p.baru}</span></div>
+          </div>
         </div>
         <a class="buy fx" href="${waLink(p)}" target="_blank" rel="noopener noreferrer">Beli sekarang</a>
       </div>
