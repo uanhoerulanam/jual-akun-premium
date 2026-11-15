@@ -63,16 +63,96 @@ body {
   left: 50%; transform: translateX(-50%);
   width: calc(100% - 24px); max-width: 460px;
   z-index: 20;
-  padding: 8px 14px;
+  padding: 8px 10px 8px 12px;
   border-radius: 20px;
-  display: flex; align-items: center; gap: 11px;
+  display: flex; align-items: center; gap: 9px;
 }
 .top img {
-  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+  width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
   box-shadow: 0 0 12px rgba(47,107,255,.6), 0 0 12px rgba(180,60,255,.5);
 }
-.top b { font-size: 15px; }
-.top small { display: block; font-size: 11px; color: var(--muted); }
+.top .ttl { min-width: 0; }
+.top .ttl b {
+  display: block;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.top .ttl small { display: block; font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+/* Badge diskon api */
+.promo {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #ff1f1f, #ff6a00);
+  border: 1px solid rgba(255,255,255,.55);
+  box-shadow: 0 0 12px rgba(255,40,20,.6), inset 0 1px 0 rgba(255,255,255,.5);
+}
+.promo::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 999px;
+  box-shadow: 0 0 16px 3px rgba(255,60,20,.9);
+  opacity: .3;
+  pointer-events: none;
+  animation: glowp 1.1s ease-in-out infinite alternate;
+}
+@keyframes glowp { to { opacity: .9; } }
+
+.promo .fire {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, #ff5a3c, #a80000);
+  box-shadow: 0 0 10px rgba(255,80,40,.9), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.promo .fire span {
+  display: block;
+  font-size: 15px;
+  line-height: 1;
+  animation: flame .55s ease-in-out infinite;
+}
+@keyframes flame {
+  0%, 100% { transform: scale(1) rotate(-5deg); }
+  50%      { transform: scale(1.2) rotate(6deg); }
+}
+.promo small {
+  display: block;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  line-height: 1;
+  color: #fff;
+}
+.promo b {
+  display: block;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: .3px;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.35);
+}
+
+.snd {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.38);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
 
 /* Pager geser */
 .pager {
@@ -244,7 +324,7 @@ body {
   pointer-events: none;
 }
 
-.dock button:focus-visible, .buy:focus-visible, .btn:focus-visible, .poster:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.dock button:focus-visible, .buy:focus-visible, .btn:focus-visible, .poster:focus-visible, .snd:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 /* Lightbox */
 #lightbox {
@@ -272,10 +352,15 @@ body {
 
 <header class="top glass blur">
   <img src="logo.jpg" alt="Logo UAN Digital Store">
-  <div>
+  <div class="ttl">
     <b>UAN Digital Store</b>
     <small>Geser untuk lihat produk →</small>
   </div>
+  <div class="promo" aria-label="Diskon besar, semua harga jadi 5 ribu">
+    <span class="fire"><span>🔥</span></span>
+    <div><small>DISKON BESAR</small><b>SEMUA 5K</b></div>
+  </div>
+  <button type="button" id="snd" class="snd" aria-label="Suara on/off">🔊</button>
 </header>
 
 <main class="pager" id="pager"></main>
@@ -445,6 +530,53 @@ document.addEventListener("pointerdown", e => {
   document.addEventListener(ev, () => document.querySelectorAll(".fx.touch").forEach(x => x.classList.remove("touch")), true)
 );
 
+/* Suara geser */
+let audioCtx = null, soundOn = true, lastIdx = 0, lastTick = 0;
+try { soundOn = localStorage.getItem("uan_sound") !== "off"; } catch (e) {}
+
+function unlockAudio() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audioCtx = new AC();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+["pointerdown", "touchstart", "keydown"].forEach(ev =>
+  document.addEventListener(ev, unlockAudio, { passive: true })
+);
+
+function playTick() {
+  if (!soundOn || !audioCtx || audioCtx.state !== "running") return;
+  const now = audioCtx.currentTime;
+  if (now - lastTick < 0.06) return;
+  lastTick = now;
+
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(420, now);
+  o.frequency.exponentialRampToValueAtTime(980, now + 0.09);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.14, now + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(now);
+  o.stop(now + 0.2);
+
+  if (navigator.vibrate) navigator.vibrate(8);
+}
+
+const sndBtn = document.getElementById("snd");
+function renderSnd() { sndBtn.textContent = soundOn ? "🔊" : "🔇"; }
+sndBtn.addEventListener("click", () => {
+  soundOn = !soundOn;
+  try { localStorage.setItem("uan_sound", soundOn ? "on" : "off"); } catch (e) {}
+  renderSnd();
+  if (soundOn) { unlockAudio(); playTick(); }
+});
+renderSnd();
+
 /* Lensa mengikuti geseran halaman */
 let dragging = false, moveTimer, ticking = false;
 
@@ -452,6 +584,7 @@ function setK(k) {
   dock.style.setProperty("--k", k);
   const n = Math.round(k);
   btns.forEach((b, i) => b.classList.toggle("on", i === n));
+  if (n !== lastIdx) { lastIdx = n; playTick(); }
 }
 function goTo(i) {
   pager.scrollTo({ left: i * pager.clientWidth, behavior: "smooth" });
