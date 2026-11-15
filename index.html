@@ -1,718 +1,702 @@
-// Plugin: iOS Context Menu (tema Apple) - versi 4
-// Pemakaian: .iqc hallo
-//            .iqc teks|18:44
-//            .iqc teks|18:44|INDOSAT OORE...
-// Dependensi: npm i @napi-rs/canvas
-// Font: otomatis diunduh (Inter). Kalau server tanpa internet,
-//       taruh font.ttf di folder yang sama dengan file ini.
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#05030d">
+<title>UAN Digital Store</title>
+<link rel="icon" href="logo.jpg">
 
-import { createCanvas, GlobalFonts } from '@napi-rs/canvas'
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
-
-const __dir = path.dirname(fileURLToPath(import.meta.url))
-
-const FONT = '"IOSFont", "Inter", "Roboto", "Noto Sans", "Liberation Sans", "DejaVu Sans", Arial, sans-serif'
-
-const W = 670
-const H = 1191
-const ROW_H = 80
-const MENU_X = 16
-const MENU_W = 479
-
-// ===== Font loader =====
-const FONT_FILES = [
-    { file: 'font.ttf' },
-    { file: 'font.otf' },
-    {
-        file: 'ios-regular.woff',
-        url: 'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/files/inter-latin-400-normal.woff'
-    },
-    {
-        file: 'ios-semibold.woff',
-        url: 'https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/files/inter-latin-600-normal.woff'
-    }
-]
-
-let fontPromise = null
-function loadFonts() {
-    if (fontPromise) return fontPromise
-    fontPromise = (async () => {
-        const hasManual = ['font.ttf', 'font.otf'].some(f => fs.existsSync(path.join(__dir, f)))
-        for (const item of FONT_FILES) {
-            const p = path.join(__dir, item.file)
-            try {
-                if (!fs.existsSync(p)) {
-                    if (!item.url || hasManual) continue
-                    const res = await fetch(item.url)
-                    if (!res.ok) continue
-                    fs.writeFileSync(p, Buffer.from(await res.arrayBuffer()))
-                }
-                GlobalFonts.registerFromPath(p, 'IOSFont')
-            } catch (e) {
-                console.error('[iqc] font gagal:', item.file, e.message)
-            }
-        }
-    })()
-    return fontPromise
+<style>
+:root {
+  --bg: #05030d;
+  --blue: #2f6bff;
+  --purple: #b43cff;
+  --silver: #f2f4ff;
+  --muted: #b4b2d0;
+  --grad: linear-gradient(90deg, var(--blue), var(--purple));
+  --k: 0;
 }
 
-// ===== Helper rounded rect (hanya membuat path) =====
-function rr(c, x, y, w, h, r) {
-    r = Math.min(r, w / 2, h / 2)
-    c.beginPath()
-    c.moveTo(x + r, y)
-    c.arcTo(x + w, y, x + w, y + h, r)
-    c.arcTo(x + w, y + h, x, y + h, r)
-    c.arcTo(x, y + h, x, y, r)
-    c.arcTo(x, y, x + w, y, r)
-    c.closePath()
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { height: 100%; }
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  color: var(--silver);
+  background: var(--bg);
+  overflow: hidden;
 }
 
-function shadowed(ctx, fn) {
-    ctx.save()
-    ctx.shadowColor = 'rgba(0,0,0,0.5)'
-    ctx.shadowBlur = 34
-    ctx.shadowOffsetY = 12
-    fn()
-    ctx.restore()
+.bg {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(47,107,255,.34), transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(180,60,255,.32), transparent 50%),
+    var(--bg);
 }
 
-function glow(ctx, x, y, r, rgb, a) {
-    const g = ctx.createRadialGradient(x, y, 0, x, y, r)
-    g.addColorStop(0, `rgba(${rgb},${a})`)
-    g.addColorStop(1, `rgba(${rgb},0)`)
-    ctx.fillStyle = g
-    ctx.fillRect(x - r, y - r, r * 2, r * 2)
+/* Kaca air bening putih */
+.glass {
+  background: linear-gradient(160deg, rgba(255,255,255,.26), rgba(255,255,255,.07) 40%, rgba(255,255,255,.12));
+  border: 1px solid rgba(255,255,255,.38);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.3),
+    inset 0 1px 0 rgba(255,255,255,.75),
+    inset 0 -1px 0 rgba(255,255,255,.15),
+    inset 0 0 18px rgba(255,255,255,.07);
+}
+.blur {
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
 }
 
-// ===== Pecah teks jadi beberapa baris =====
-function wrapText(ctx, text, maxW, maxLines = 5) {
-    const lines = []
-    for (const p of String(text).split('\n')) {
-        let line = ''
-        for (const word of p.split(' ')) {
-            const test = line ? line + ' ' + word : word
-            if (ctx.measureText(test).width <= maxW) {
-                line = test
-                continue
-            }
-            if (line) lines.push(line)
-            let chunk = ''
-            for (const ch of word) {
-                if (ctx.measureText(chunk + ch).width > maxW) {
-                    lines.push(chunk)
-                    chunk = ch
-                } else chunk += ch
-            }
-            line = chunk
-        }
-        lines.push(line)
-    }
-    if (lines.length > maxLines) {
-        lines.length = maxLines
-        let last = lines[maxLines - 1]
-        while (last && ctx.measureText(last + '...').width > maxW) last = last.slice(0, -1)
-        lines[maxLines - 1] = last + '...'
-    }
-    return lines
+.grad-text {
+  background: var(--grad);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-// ===== Background chat dengan teks blur =====
-function drawBackground(ctx) {
-    const k = 0.25
-    const sw = Math.round(W * k)
-    const sh = Math.round(H * k)
-
-    const small = createCanvas(sw, sh)
-    const c = small.getContext('2d')
-
-    const box = (x, y, w, h, color, r = 20) => {
-        c.fillStyle = color
-        rr(c, x * k, y * k, w * k, h * k, r * k)
-        c.fill()
-    }
-
-    const message = (x, y, texts, color, lh = 34) => {
-        c.fillStyle = color
-        c.font = `${27 * k}px ${FONT}`
-        c.textAlign = 'left'
-        c.textBaseline = 'middle'
-        texts.forEach((txt, i) => c.fillText(txt, x * k, (y + i * lh) * k))
-    }
-
-    const bg = c.createLinearGradient(0, 0, 0, sh)
-    bg.addColorStop(0, '#06090e')
-    bg.addColorStop(1, '#03050a')
-    c.fillStyle = bg
-    c.fillRect(0, 0, sw, sh)
-
-    // Header
-    c.fillStyle = '#2a2c31'
-    c.beginPath()
-    c.arc(155 * k, 82 * k, 27 * k, 0, Math.PI * 2)
-    c.fill()
-    box(200, 68, 135, 26, '#2c2e33', 13)
-    box(515, 55, 50, 38, '#12306b', 12)
-    box(595, 55, 50, 38, '#12306b', 12)
-
-    // Chat keluar kanan atas
-    box(355, 120, 290, 155, '#0d7a63', 28)
-    message(377, 152, [
-        'Halo, apa kabar hari ini?',
-        'Aku ingin memberi tahu',
-        'sesuatu. Nanti kita ngobrol',
-        'lagi ya.'
-    ], '#a8ecda')
-
-    // Chat masuk
-    box(20, 295, 250, 38, '#25272b', 16)
-    message(38, 314, ['Iya, aku mengerti.'], '#9a9ba0')
-
-    // Chat keluar tengah
-    box(120, 455, 525, 160, '#0d7a63', 30)
-    message(300, 488, [
-        'Baik, nanti aku kabari lagi.',
-        'Semoga semuanya berjalan',
-        'lancar. Jangan lupa hubungi',
-        'aku ya, sampai bertemu nanti.'
-    ], '#a8ecda')
-
-    // Chat keluar bawah
-    box(130, 705, 515, 260, '#0d7a63', 30)
-    message(300, 740, [
-        'Aku sudah sampai.',
-        'Terima kasih untuk hari ini.',
-        'Senang bisa ngobrol bersama.',
-        'Nanti kita lanjut lagi.',
-        'Semoga harimu menyenangkan.',
-        'Sampai jumpa besok.',
-        'Jaga diri baik-baik ya.'
-    ], '#a8ecda')
-
-    // Chat masuk bawah
-    box(20, 1000, 250, 36, '#25272b', 14)
-    message(38, 1018, ['Oke, sampai nanti.'], '#9a9ba0')
-
-    // Toolbar bawah
-    box(530, 1120, 50, 48, '#143a80', 16)
-    box(610, 1120, 40, 48, '#143a80', 16)
-
-    // Blur bertahap
-    const mid = createCanvas(Math.round(W / 4), Math.round(H / 4))
-    const m = mid.getContext('2d')
-    m.imageSmoothingEnabled = true
-    m.imageSmoothingQuality = 'high'
-    m.drawImage(small, 0, 0, sw, sh, 0, 0, mid.width, mid.height)
-
-    ctx.save()
-    ctx.imageSmoothingEnabled = true
-    ctx.imageSmoothingQuality = 'high'
-    ctx.drawImage(mid, 0, 0, mid.width, mid.height, 0, 0, W, H)
-    ctx.restore()
-
-    // Cahaya warna (biar tidak monoton)
-    glow(ctx, 520, 190, 320, '20,200,160', 0.22)
-    glow(ctx, 330, 850, 400, '20,170,140', 0.16)
-    glow(ctx, 580, 1110, 280, '50,110,255', 0.2)
-    glow(ctx, 70, 160, 260, '140,90,255', 0.13)
-
-    // Overlay gelap + vignette
-    ctx.fillStyle = 'rgba(0,0,0,0.26)'
-    ctx.fillRect(0, 0, W, H)
-    const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.8)
-    vg.addColorStop(0, 'rgba(0,0,0,0)')
-    vg.addColorStop(1, 'rgba(0,0,0,0.45)')
-    ctx.fillStyle = vg
-    ctx.fillRect(0, 0, W, H)
+/* Header */
+.top {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  left: 50%; transform: translateX(-50%);
+  width: calc(100% - 24px); max-width: 460px;
+  z-index: 20;
+  padding: 8px 10px 8px 12px;
+  border-radius: 20px;
+  display: flex; align-items: center; gap: 9px;
+}
+.top img {
+  width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+  box-shadow: 0 0 12px rgba(47,107,255,.6), 0 0 12px rgba(180,60,255,.5);
+}
+.top .ttl { min-width: 0; }
+.top .ttl b {
+  display: block;
+  font-size: 13px;
+  line-height: 1.15;
 }
 
-// ===== Status bar iOS =====
-function drawStatusBar(ctx, time, carrier) {
-    ctx.textBaseline = 'middle'
+/* Badge diskon api */
+.promo {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px 4px 4px;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #ff1f1f, #ff6a00);
+  border: 1px solid rgba(255,255,255,.55);
+  box-shadow: 0 0 12px rgba(255,40,20,.6), inset 0 1px 0 rgba(255,255,255,.5);
+}
+.promo::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 999px;
+  box-shadow: 0 0 16px 3px rgba(255,60,20,.9);
+  opacity: .3;
+  pointer-events: none;
+  animation: glowp 1.1s ease-in-out infinite alternate;
+}
+@keyframes glowp { to { opacity: .9; } }
 
-    ;[5, 7, 9, 11].forEach((h, i) => {
-        ctx.fillStyle = '#fff'
-        rr(ctx, 25 + i * 6, 37 - h, 4, h, 1)
-        ctx.fill()
-    })
-
-    ctx.fillStyle = '#fff'
-    ctx.textAlign = 'left'
-    ctx.font = `600 15px ${FONT}`
-    ctx.fillText(carrier, 62, 31)
-    const cw = ctx.measureText(carrier).width
-    ctx.fillText('LTE', 62 + cw + 8, 31)
-
-    ctx.textAlign = 'center'
-    ctx.font = `600 17px ${FONT}`
-    ctx.fillText(time, 335, 31)
-
-    // WiFi
-    ctx.strokeStyle = '#fff'
-    ctx.lineWidth = 2
-    ctx.lineCap = 'round'
-    for (let i = 0; i < 3; i++) {
-        ctx.beginPath()
-        ctx.arc(544, 36, 4 + i * 4.5, Math.PI * 1.27, Math.PI * 1.73)
-        ctx.stroke()
-    }
-    ctx.fillStyle = '#fff'
-    ctx.beginPath()
-    ctx.arc(544, 35, 1.6, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Baterai
-    ctx.textAlign = 'left'
-    ctx.font = `600 15px ${FONT}`
-    ctx.fillText('88%', 567, 31)
-    ctx.strokeStyle = 'rgba(255,255,255,0.45)'
-    ctx.lineWidth = 1.5
-    rr(ctx, 617, 23, 29, 15, 4.5)
-    ctx.stroke()
-    ctx.fillStyle = '#30d158'
-    rr(ctx, 619, 25, 25 * 0.88, 11, 3)
-    ctx.fill()
-    ctx.fillStyle = 'rgba(255,255,255,0.45)'
-    rr(ctx, 648, 28, 2.5, 5, 1)
-    ctx.fill()
+.promo .fire {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, #ff5a3c, #a80000);
+  box-shadow: 0 0 10px rgba(255,80,40,.9), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.promo .fire span {
+  display: block;
+  font-size: 15px;
+  line-height: 1;
+  animation: flame .55s ease-in-out infinite;
+}
+@keyframes flame {
+  0%, 100% { transform: scale(1) rotate(-5deg); }
+  50%      { transform: scale(1.2) rotate(6deg); }
+}
+.promo small {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .6px;
+  line-height: 1;
+  color: #fff;
+}
+.promo b {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: .2px;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.35);
 }
 
-// ===== Emoji gaya Apple (digambar manual, tanpa font) =====
-function face(c, cx, cy, r) {
-    const g = c.createRadialGradient(cx - r * 0.3, cy - r * 0.4, r * 0.1, cx, cy, r)
-    g.addColorStop(0, '#ffe680')
-    g.addColorStop(1, '#f6ae1d')
-    c.fillStyle = g
-    c.beginPath()
-    c.arc(cx, cy, r, 0, Math.PI * 2)
-    c.fill()
+.snd {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.38);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
 }
 
-function drop(c, x, y, s, color = '#4fc3f7') {
-    c.fillStyle = color
-    c.beginPath()
-    c.moveTo(x, y - s)
-    c.quadraticCurveTo(x + s * 0.9, y + s * 0.2, x, y + s)
-    c.quadraticCurveTo(x - s * 0.9, y + s * 0.2, x, y - s)
-    c.fill()
+/* Pager geser */
+.pager {
+  position: fixed; inset: 0;
+  display: flex;
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.pager::-webkit-scrollbar { display: none; }
+
+.slide {
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(74px + env(safe-area-inset-top, 0px)) 14px calc(96px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; align-items: center;
+}
+.slide > .in { width: 100%; max-width: 460px; margin: auto; }
+
+/* Poster utuh, tidak terpotong */
+.poster-box { display: flex; justify-content: center; margin-bottom: 12px; }
+.poster {
+  position: relative;
+  display: block;
+  padding: 0; border: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: zoom-in;
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.3), 0 0 26px rgba(255,255,255,.12);
+}
+.poster img {
+  display: block;
+  max-width: 100%;
+  max-height: max(230px, calc(100dvh - 340px));
+  width: auto; height: auto;
+}
+.badge {
+  position: absolute; top: 10px; left: 10px;
+  padding: 5px 11px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; color: #1a1440;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 3px 10px rgba(0,0,0,.3);
 }
 
-const emo = {
-    thumb(c, cx, cy, r) {
-        const yel = c.createLinearGradient(cx, cy - r, cx, cy + r)
-        yel.addColorStop(0, '#ffd966')
-        yel.addColorStop(1, '#f5a623')
-        c.fillStyle = yel
-        c.save()
-        c.translate(cx - r * 0.05, cy - r * 0.35)
-        c.rotate(-0.25)
-        rr(c, -r * 0.28, -r * 0.7, r * 0.56, r * 1.1, r * 0.28)
-        c.fill()
-        c.restore()
-        rr(c, cx - r * 0.45, cy - r * 0.15, r * 1.4, r * 1.0, r * 0.3)
-        c.fill()
-        c.strokeStyle = '#d98a14'
-        c.lineWidth = r * 0.07
-        c.lineCap = 'round'
-        for (let i = 0; i < 3; i++) {
-            c.beginPath()
-            c.moveTo(cx + r * 0.35, cy + r * (0.12 + i * 0.25))
-            c.lineTo(cx + r * 0.85, cy + r * (0.12 + i * 0.25))
-            c.stroke()
-        }
-        c.fillStyle = '#5b86c5'
-        rr(c, cx - r * 1.0, cy - r * 0.05, r * 0.48, r * 0.95, r * 0.1)
-        c.fill()
-    },
-    heart(c, cx, cy, r) {
-        const g = c.createLinearGradient(cx, cy - r, cx, cy + r)
-        g.addColorStop(0, '#ff6b6b')
-        g.addColorStop(1, '#d6141f')
-        c.fillStyle = g
-        c.beginPath()
-        c.moveTo(cx, cy + r * 0.9)
-        c.bezierCurveTo(cx - r * 1.45, cy + r * 0.05, cx - r * 0.95, cy - r * 1.0, cx, cy - r * 0.4)
-        c.bezierCurveTo(cx + r * 0.95, cy - r * 1.0, cx + r * 1.45, cy + r * 0.05, cx, cy + r * 0.9)
-        c.fill()
-        c.fillStyle = 'rgba(255,255,255,0.28)'
-        c.beginPath()
-        c.ellipse(cx - r * 0.5, cy - r * 0.35, r * 0.2, r * 0.12, -0.6, 0, Math.PI * 2)
-        c.fill()
-    },
-    laugh(c, cx, cy, r) {
-        face(c, cx, cy, r)
-        c.strokeStyle = '#5a3a12'
-        c.lineWidth = r * 0.11
-        c.lineCap = 'round'
-        c.lineJoin = 'round'
-        c.beginPath()
-        c.moveTo(cx - r * 0.62, cy - r * 0.45); c.lineTo(cx - r * 0.2, cy - r * 0.25); c.lineTo(cx - r * 0.62, cy - r * 0.05)
-        c.stroke()
-        c.beginPath()
-        c.moveTo(cx + r * 0.62, cy - r * 0.45); c.lineTo(cx + r * 0.2, cy - r * 0.25); c.lineTo(cx + r * 0.62, cy - r * 0.05)
-        c.stroke()
-        c.fillStyle = '#5a2a10'
-        c.beginPath()
-        c.moveTo(cx - r * 0.68, cy + r * 0.12)
-        c.quadraticCurveTo(cx, cy + r * 0.22, cx + r * 0.68, cy + r * 0.12)
-        c.quadraticCurveTo(cx + r * 0.5, cy + r * 0.88, cx, cy + r * 0.88)
-        c.quadraticCurveTo(cx - r * 0.5, cy + r * 0.88, cx - r * 0.68, cy + r * 0.12)
-        c.fill()
-        c.fillStyle = '#fff'
-        c.beginPath()
-        c.moveTo(cx - r * 0.6, cy + r * 0.16)
-        c.quadraticCurveTo(cx, cy + r * 0.26, cx + r * 0.6, cy + r * 0.16)
-        c.lineTo(cx + r * 0.54, cy + r * 0.34)
-        c.quadraticCurveTo(cx, cy + r * 0.44, cx - r * 0.54, cy + r * 0.34)
-        c.fill()
-        c.fillStyle = '#f0626f'
-        c.beginPath()
-        c.ellipse(cx, cy + r * 0.72, r * 0.28, r * 0.13, 0, 0, Math.PI * 2)
-        c.fill()
-        drop(c, cx - r * 0.98, cy, r * 0.2)
-        drop(c, cx + r * 0.98, cy, r * 0.2)
-    },
-    wow(c, cx, cy, r) {
-        face(c, cx, cy, r)
-        c.fillStyle = '#5a3a12'
-        for (const s of [-1, 1]) {
-            c.beginPath()
-            c.ellipse(cx + s * r * 0.36, cy - r * 0.12, r * 0.1, r * 0.17, 0, 0, Math.PI * 2)
-            c.fill()
-        }
-        c.strokeStyle = '#7a4a14'
-        c.lineWidth = r * 0.08
-        c.lineCap = 'round'
-        for (const s of [-1, 1]) {
-            c.beginPath()
-            c.arc(cx + s * r * 0.36, cy - r * 0.22, r * 0.26, Math.PI * 1.2, Math.PI * 1.8)
-            c.stroke()
-        }
-        c.fillStyle = '#5a2a10'
-        c.beginPath()
-        c.ellipse(cx, cy + r * 0.5, r * 0.2, r * 0.28, 0, 0, Math.PI * 2)
-        c.fill()
-    },
-    cry(c, cx, cy, r) {
-        face(c, cx, cy, r)
-        c.strokeStyle = '#7a4a14'
-        c.lineWidth = r * 0.09
-        c.lineCap = 'round'
-        c.beginPath()
-        c.moveTo(cx - r * 0.62, cy - r * 0.28); c.lineTo(cx - r * 0.2, cy - r * 0.5)
-        c.stroke()
-        c.beginPath()
-        c.moveTo(cx + r * 0.62, cy - r * 0.28); c.lineTo(cx + r * 0.2, cy - r * 0.5)
-        c.stroke()
-        c.fillStyle = '#5a3a12'
-        for (const s of [-1, 1]) {
-            c.beginPath()
-            c.ellipse(cx + s * r * 0.38, cy - r * 0.05, r * 0.1, r * 0.15, 0, 0, Math.PI * 2)
-            c.fill()
-        }
-        c.strokeStyle = '#5a3a12'
-        c.lineWidth = r * 0.1
-        c.beginPath()
-        c.arc(cx, cy + r * 0.85, r * 0.3, Math.PI * 1.15, Math.PI * 1.85)
-        c.stroke()
-        drop(c, cx - r * 0.5, cy + r * 0.35, r * 0.2)
-    },
-    pray(c, cx, cy, r) {
-        for (const s of [-1, 1]) {
-            c.save()
-            c.translate(cx + s * r * 0.12, cy + r * 0.2)
-            c.rotate(s * 0.22)
-            const g = c.createLinearGradient(0, -r, 0, r * 0.6)
-            g.addColorStop(0, '#ffd966')
-            g.addColorStop(1, '#f2a41e')
-            c.fillStyle = g
-            rr(c, -r * 0.34, -r * 1.05, r * 0.68, r * 1.5, r * 0.34)
-            c.fill()
-            c.strokeStyle = 'rgba(180,110,10,0.6)'
-            c.lineWidth = r * 0.05
-            c.stroke()
-            c.restore()
-        }
-        c.fillStyle = '#5b86c5'
-        rr(c, cx - r * 0.55, cy + r * 0.5, r * 1.1, r * 0.5, r * 0.1)
-        c.fill()
-    }
+/* Panel beli */
+.panel { border-radius: 20px; padding: 14px 16px 16px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.row > div:first-child { min-width: 0; }
+.row h3 { font-size: 16px; line-height: 1.25; }
+.row small { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+/* Kotak harga: DARI & JADI */
+.prices {
+  flex-shrink: 0;
+  display: grid;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(0,0,0,.28), rgba(0,0,0,.12));
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+}
+.pr {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.lbl {
+  display: inline-block;
+  min-width: 42px;
+  padding: 3px 0;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .8px;
+  line-height: 1.2;
+}
+.lbl.dari {
+  color: #ffb3c1;
+  background: rgba(255,77,109,.16);
+  border: 1px solid rgba(255,77,109,.4);
+}
+.lbl.jadi {
+  color: #fff;
+  background: linear-gradient(135deg, #ff3d3d, #ff9100);
+  box-shadow: 0 2px 10px rgba(255,90,30,.55), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.old {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a8a4c4;
+  text-decoration: line-through;
+  text-decoration-color: #ff4d6d;
+  text-decoration-thickness: 2px;
+}
+.price {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: .2px;
+  background: linear-gradient(180deg, #ffffff 20%, #ffe29a 100%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 10px rgba(255,200,100,.45));
 }
 
-// ===== Bar reaksi emoji =====
-function drawReactionBar(ctx, y) {
-    const g = ctx.createLinearGradient(0, y, 0, y + 96)
-    g.addColorStop(0, 'rgba(66,66,72,0.97)')
-    g.addColorStop(1, 'rgba(44,44,50,0.97)')
-
-    shadowed(ctx, () => {
-        ctx.fillStyle = g
-        rr(ctx, 16, y, 504, 96, 48)
-        ctx.fill()
-    })
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.09)'
-    ctx.lineWidth = 1.5
-    rr(ctx, 16.75, y + 0.75, 502.5, 94.5, 47.5)
-    ctx.stroke()
-
-    const list = ['thumb', 'heart', 'laugh', 'wow', 'cry', 'pray']
-    list.forEach((name, i) => emo[name](ctx, 72 + i * 78.2, y + 48, 25))
+.buy, .btn {
+  display: block; width: 100%;
+  padding: 13px;
+  border: 0; border-radius: 14px;
+  font-size: 14px; font-weight: 700;
+  text-align: center; text-decoration: none;
+  cursor: pointer;
+  color: #1a1440;
+  background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(214,228,255,.88));
+  box-shadow: 0 6px 18px rgba(255,255,255,.18), inset 0 1px 0 #fff, inset 0 -2px 6px rgba(120,150,255,.25);
 }
 
-// ===== Bubble pesan =====
-function measureBubble(ctx, text, time) {
-    ctx.font = `400 28px ${FONT}`
-    const lines = wrapText(ctx, text, 500)
-    const widths = lines.map(l => ctx.measureText(l).width)
-    const maxW = Math.max(...widths)
-    const lastW = widths[widths.length - 1]
+/* Efek sentuh air */
+.fx { position: relative; overflow: hidden; transition: transform .15s; }
+.fx > * { position: relative; z-index: 2; }
+.fx.touch { transform: scale(.975); }
+.ripple {
+  position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.75);
+  background: radial-gradient(circle, rgba(255,255,255,.3), transparent 70%);
+  pointer-events: none; z-index: 1;
+  animation: rip .75s ease-out forwards;
+}
+@keyframes rip { from { transform: scale(0); opacity: 1; } to { transform: scale(15); opacity: 0; } }
 
-    ctx.font = `400 19px ${FONT}`
-    const timeW = ctx.measureText(time).width
+/* Halaman pembayaran */
+.pay h2 { font-size: 19px; margin-bottom: 6px; }
+.pay p { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 14px; }
+.qr { max-width: 300px; margin: 0 auto 14px; }
+.qr .poster { width: 100%; }
+.qr .poster img { max-height: none; width: 100%; }
+.steps { list-style: none; counter-reset: s; display: grid; gap: 9px; margin-bottom: 14px; }
+.steps li { counter-increment: s; display: flex; gap: 11px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.steps li::before {
+  content: counter(s); flex-shrink: 0;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(255,255,255,.9); color: #1a1440;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.info { margin-top: 14px; border-radius: 20px; padding: 18px 16px; }
+.info h3 { text-align: center; font-size: 16px; margin-bottom: 12px; }
+.info ul { list-style: none; display: grid; gap: 9px; margin-bottom: 14px; }
+.info li { display: flex; gap: 10px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.info li::before {
+  content: "✓"; flex-shrink: 0;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(255,255,255,.9); color: #1a1440;
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; margin-top: 1px;
+}
+.guarantee {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.4);
+  background: linear-gradient(135deg, rgba(255,255,255,.2), rgba(255,255,255,.06));
+}
+.guarantee .g { font-size: 26px; }
+.guarantee b { display: block; font-size: 15px; }
+.guarantee span { font-size: 13px; line-height: 1.5; }
+.foot { text-align: center; font-size: 12px; color: #77749a; margin-top: 18px; line-height: 1.7; }
 
-    const inline = lastW + 16 + timeW <= 500
-    const contentW = Math.max(maxW, inline ? lastW + 16 + timeW : 0, timeW)
-    const w = Math.round(Math.min(560, contentW + 38))
-    const h = 18 + lines.length * 36 + (inline ? 8 : 26)
+/* Dock lensa */
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(94vw, 400px);
+  padding: 5px;
+  border-radius: 999px;
+  display: flex;
+  touch-action: pan-y;
+  user-select: none; -webkit-user-select: none;
+}
+.lens {
+  position: absolute; top: 5px; bottom: 5px; left: 5px;
+  width: calc((100% - 10px) / 5);
+  border-radius: 999px;
+  background:
+    radial-gradient(120% 140% at 30% 0%, rgba(255,255,255,.7), rgba(255,255,255,.14) 60%),
+    rgba(255,255,255,.1);
+  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 6px rgba(255,255,255,.25), 0 3px 14px rgba(255,255,255,.2);
+  transform: translateX(calc(var(--k) * 100%));
+  transition: scale .35s cubic-bezier(.34,1.6,.5,1);
+  pointer-events: none;
+}
+.dock.moving .lens { scale: 1.16 1.1; }
+.dock button {
+  position: relative; z-index: 1; flex: 1;
+  padding: 7px 0 6px;
+  border: 0; background: none;
+  color: var(--muted);
+  font-size: 10.5px; font-weight: 600;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; transition: color .2s;
+}
+.dock button.on { color: #fff; }
 
-    return { lines, w, h, inline, timeW }
+/* Ikon logo di dock */
+.ico {
+  display: block;
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  pointer-events: none;
 }
 
-function drawBubble(ctx, b, y, time) {
-    const g = ctx.createLinearGradient(0, y, 0, y + b.h)
-    g.addColorStop(0, '#444449')
-    g.addColorStop(1, '#38383c')
+.dock button:focus-visible, .buy:focus-visible, .btn:focus-visible, .poster:focus-visible, .snd:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
-    shadowed(ctx, () => {
-        ctx.fillStyle = g
-        rr(ctx, 16, y, b.w, b.h, 22)
-        ctx.fill()
-    })
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)'
-    ctx.lineWidth = 1.5
-    rr(ctx, 16.75, y + 0.75, b.w - 1.5, b.h - 1.5, 21.5)
-    ctx.stroke()
-
-    ctx.fillStyle = '#fff'
-    ctx.font = `400 28px ${FONT}`
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'middle'
-    b.lines.forEach((l, i) => ctx.fillText(l, 35, y + 36 + i * 36))
-
-    ctx.fillStyle = '#a2a2a8'
-    ctx.font = `400 19px ${FONT}`
-    ctx.textAlign = 'right'
-    const ty = b.inline ? y + 36 + (b.lines.length - 1) * 36 + 8 : y + b.h - 15
-    ctx.fillText(time, 16 + b.w - 16, ty)
+/* Lightbox */
+#lightbox {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,.93);
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px;
+  opacity: 0; pointer-events: none; transition: opacity .2s; cursor: zoom-out;
+}
+#lightbox.open { opacity: 1; pointer-events: auto; }
+#lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; }
+#lightbox .x {
+  position: absolute; top: 14px; right: 14px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,.15); color: #fff; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
 }
 
-// ===== Ikon menu =====
-const icons = {
-    star(c, x, y) {
-        c.beginPath()
-        for (let i = 0; i < 10; i++) {
-            const r = i % 2 === 0 ? 17 : 7.5
-            const a = -Math.PI / 2 + (i * Math.PI) / 5
-            const px = x + r * Math.cos(a)
-            const py = y + 1 + r * Math.sin(a)
-            i ? c.lineTo(px, py) : c.moveTo(px, py)
-        }
-        c.closePath()
-        c.stroke()
-    },
-    reply(c, x, y) {
-        c.beginPath()
-        c.moveTo(x - 7, y - 13); c.lineTo(x - 19, y - 1); c.lineTo(x - 7, y + 11)
-        c.closePath()
-        c.stroke()
-        c.beginPath()
-        c.moveTo(x - 12, y - 1)
-        c.lineTo(x + 3, y - 1)
-        c.quadraticCurveTo(x + 18, y - 1, x + 18, y + 14)
-        c.stroke()
-    },
-    forward(c, x, y) {
-        c.beginPath()
-        c.moveTo(x + 7, y - 13); c.lineTo(x + 19, y - 1); c.lineTo(x + 7, y + 11)
-        c.closePath()
-        c.stroke()
-        c.beginPath()
-        c.moveTo(x + 12, y - 1)
-        c.lineTo(x - 3, y - 1)
-        c.quadraticCurveTo(x - 18, y - 1, x - 18, y + 14)
-        c.stroke()
-    },
-    copy(c, x, y) {
-        c.beginPath()
-        c.moveTo(x - 5, y - 17)
-        c.lineTo(x - 12, y - 17)
-        c.quadraticCurveTo(x - 17, y - 17, x - 17, y - 12)
-        c.lineTo(x - 17, y)
-        c.quadraticCurveTo(x - 17, y + 5, x - 12, y + 5)
-        c.lineTo(x - 5, y + 5)
-        c.stroke()
-        c.beginPath()
-        c.moveTo(x + 5, y - 5)
-        c.lineTo(x + 5, y - 12)
-        c.quadraticCurveTo(x + 5, y - 17, x, y - 17)
-        c.lineTo(x - 5, y - 17)
-        c.stroke()
-        rr(c, x - 5, y - 5, 22, 22, 5)
-        c.stroke()
-    },
-    speak(c, x, y) {
-        rr(c, x - 16, y - 16, 32, 25, 7)
-        c.stroke()
-        c.beginPath()
-        c.moveTo(x - 7, y + 9); c.lineTo(x - 7, y + 17); c.lineTo(x + 2, y + 9)
-        c.stroke()
-    },
-    warn(c, x, y) {
-        c.beginPath()
-        c.moveTo(x, y - 16); c.lineTo(x + 18, y + 14); c.lineTo(x - 18, y + 14)
-        c.closePath()
-        c.stroke()
-        c.beginPath()
-        c.moveTo(x, y - 5); c.lineTo(x, y + 4)
-        c.stroke()
-        c.fillStyle = c.strokeStyle
-        c.beginPath(); c.arc(x, y + 9.5, 1.6, 0, Math.PI * 2); c.fill()
-    },
-    trash(c, x, y) {
-        c.beginPath()
-        c.moveTo(x - 15, y - 10); c.lineTo(x + 15, y - 10)
-        c.moveTo(x - 5, y - 10); c.lineTo(x - 5, y - 15); c.lineTo(x + 5, y - 15); c.lineTo(x + 5, y - 10)
-        c.stroke()
-        c.beginPath()
-        c.moveTo(x - 11, y - 10); c.lineTo(x - 9, y + 15); c.lineTo(x + 9, y + 15); c.lineTo(x + 11, y - 10)
-        c.stroke()
-        c.beginPath()
-        c.moveTo(x - 4, y - 4); c.lineTo(x - 4, y + 10)
-        c.moveTo(x + 4, y - 4); c.lineTo(x + 4, y + 10)
-        c.stroke()
-    }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+
+<body>
+<div class="bg"></div>
+
+<header class="top glass blur">
+  <img src="logo.jpg" alt="Logo UAN Digital Store">
+  <div class="ttl">
+    <b>UAN Digital Store</b>
+  </div>
+  <div class="promo" aria-label="Diskon besar, semua jadi harga 5 ribu">
+    <span class="fire"><span>🔥</span></span>
+    <div><small>DISKON BESAR</small><b>SEMUA JADI<br>HARGA 5K</b></div>
+  </div>
+  <button type="button" id="snd" class="snd" aria-label="Suara on/off">🔊</button>
+</header>
+
+<main class="pager" id="pager"></main>
+
+<nav class="dock glass blur" id="dock" aria-label="Navigasi halaman">
+  <div class="lens" aria-hidden="true"></div>
+</nav>
+
+<div id="lightbox" role="dialog" aria-label="Gambar diperbesar">
+  <div class="x">✕</div>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+const nomorAdmin = "6285136446443";
+
+/* Data produk */
+const produk = {
+  am: {
+    nama: "Alight Motion Premium", tab: "am", logo: "alightmotionlogo.jpg",
+    img: "Alightmotion.jpg", durasi: "1 Tahun", lama: "Rp119.000", baru: "Rp5.000", diskon: "Hemat 96%",
+    pesan: "Halo, Bang. Mau order AM Premium 1 tahun pakai Gmail sendiri, harga 5K."
+  },
+  wink: {
+    nama: "Wink VIP+ Premium", tab: "wink", logo: "winklogo.jpg",
+    img: "wink.jpg", durasi: "7 Hari", lama: "Rp31.900", baru: "Rp5.000", diskon: "Hemat 84%",
+    pesan: "Halo, Bang! Saya ingin order Wink VIP+ Premium 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  },
+  yt: {
+    nama: "YouTube Premium", tab: "yt", logo: "youtubelogo.jpg",
+    img: "youtube.jpg", durasi: "1 Bulan", lama: "Rp69.000", baru: "Rp5.000", diskon: "Hemat 93%",
+    pesan: "Halo, Bang! Saya ingin order YouTube Premium 1 Bulan seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  },
+  bstation: {
+    nama: "Bstation Premium (Private)", tab: "bstation", logo: "bstationlogo.jpg",
+    img: "bstation.jpg", durasi: "7 Hari", lama: "Rp12.000", baru: "Rp5.000", diskon: "Hemat 58%",
+    pesan: "Halo, Bang! Saya ingin order Bstation Premium Private 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  }
+};
+
+/* Urutan halaman & navbar: QR di tengah */
+const urutan = ["am", "wink", "qr", "yt", "bstation"];
+const N = urutan.length;
+
+const iconQR = `
+<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+  <rect width="24" height="24" rx="7" fill="#fff"/>
+  <g fill="#1a1440">
+    <rect x="4.5" y="4.5" width="6" height="6" rx="1"/>
+    <rect x="13.5" y="4.5" width="6" height="6" rx="1"/>
+    <rect x="4.5" y="13.5" width="6" height="6" rx="1"/>
+    <rect x="13.5" y="13.5" width="2.6" height="2.6"/>
+    <rect x="17" y="17" width="2.6" height="2.6"/>
+    <rect x="17" y="13.5" width="2.6" height="2.6"/>
+    <rect x="13.5" y="17" width="2.6" height="2.6"/>
+  </g>
+  <g fill="#fff">
+    <rect x="6.2" y="6.2" width="2.6" height="2.6"/>
+    <rect x="15.2" y="6.2" width="2.6" height="2.6"/>
+    <rect x="6.2" y="15.2" width="2.6" height="2.6"/>
+  </g>
+</svg>`;
+
+const pager = document.getElementById("pager");
+const dock = document.getElementById("dock");
+
+/* Link WhatsApp (link biasa, tidak diblokir browser) */
+function waLink(p) {
+  return "https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(p.pesan);
 }
 
-// ===== Menu konteks iOS =====
-function drawMenu(ctx, y) {
-    const items = [
-        { label: 'Beri Bintang', icon: 'star' },
-        { label: 'Balas', icon: 'reply' },
-        { label: 'Teruskan', icon: 'forward' },
-        { label: 'Salin', icon: 'copy' },
-        { label: 'Ucapkan', icon: 'speak' },
-        { label: 'Laporkan', icon: 'warn' },
-        { label: 'Hapus', icon: 'trash', danger: true }
-    ]
-    const h = items.length * ROW_H
-
-    // Panel kaca
-    const g = ctx.createLinearGradient(0, y, 0, y + h)
-    g.addColorStop(0, 'rgba(70,74,74,0.97)')
-    g.addColorStop(1, 'rgba(48,54,54,0.97)')
-
-    shadowed(ctx, () => {
-        ctx.fillStyle = g
-        rr(ctx, MENU_X, y, MENU_W, h, 26)
-        ctx.fill()
-    })
-
-    // Semburat warna teal di panel
-    ctx.save()
-    rr(ctx, MENU_X, y, MENU_W, h, 26)
-    ctx.clip()
-    glow(ctx, MENU_X + MENU_W * 0.8, y + h * 0.75, 320, '40,190,160', 0.10)
-    glow(ctx, MENU_X + 40, y + 20, 260, '255,255,255', 0.05)
-    ctx.restore()
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.09)'
-    ctx.lineWidth = 1.5
-    rr(ctx, MENU_X + 0.75, y + 0.75, MENU_W - 1.5, h - 1.5, 25.5)
-    ctx.stroke()
-
-    // Pemisah
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)'
-    ctx.lineWidth = 1
-    for (let i = 1; i < items.length; i++) {
-        const ly = Math.round(y + i * ROW_H) + 0.5
-        ctx.beginPath(); ctx.moveTo(MENU_X, ly); ctx.lineTo(MENU_X + MENU_W, ly); ctx.stroke()
-    }
-
-    items.forEach((it, i) => {
-        const cy = y + i * ROW_H + ROW_H / 2
-        ctx.fillStyle = it.danger ? '#ff5b3a' : '#ffffff'
-        ctx.font = `400 27px ${FONT}`
-        ctx.textAlign = 'left'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(it.label, 44, cy)
-
-        ctx.strokeStyle = it.danger ? '#ff5b3a' : 'rgba(235,235,245,0.85)'
-        ctx.lineWidth = 2.3
-        ctx.lineCap = 'round'
-        ctx.lineJoin = 'round'
-        icons[it.icon](ctx, 448, cy)
-    })
-    return h
+/* Halaman produk: 1 halaman = 1 banner */
+function slideProduk(id, first) {
+  const p = produk[id];
+  const s = document.createElement("section");
+  s.className = "slide";
+  s.innerHTML = `
+    <div class="in">
+      <div class="poster-box">
+        <button type="button" class="poster fx" data-zoom="${p.img}" aria-label="Perbesar poster ${p.nama}">
+          <img src="${p.img}" alt="Poster ${p.nama}" ${first ? "" : 'loading="lazy"'}>
+          <span class="badge">${p.diskon}</span>
+        </button>
+      </div>
+      <div class="panel glass">
+        <div class="row">
+          <div><h3>${p.nama}</h3><small>Masa aktif ${p.durasi}</small></div>
+          <div class="prices">
+            <div class="pr"><span class="lbl dari">DARI</span><span class="old">${p.lama}</span></div>
+            <div class="pr"><span class="lbl jadi">JADI</span><span class="price">${p.baru}</span></div>
+          </div>
+        </div>
+        <a class="buy fx" href="${waLink(p)}" target="_blank" rel="noopener noreferrer">Beli sekarang</a>
+      </div>
+    </div>`;
+  return s;
 }
 
-// ===== Render utama =====
-function render(text, time, carrier) {
-    const canvas = createCanvas(W, H)
-    const ctx = canvas.getContext('2d')
+/* Halaman pembayaran + info */
+function slideQR() {
+  const s = document.createElement("section");
+  s.className = "slide";
+  s.innerHTML = `
+    <div class="in pay">
+      <div class="panel glass">
+        <h2>Pembayaran QRIS</h2>
+        <p>Satu QR untuk semua pembayaran. Bisa lewat e-wallet atau m-banking apa saja.</p>
+        <div class="qr">
+          <button type="button" class="poster fx" data-zoom="qr.jpg" aria-label="Perbesar QR pembayaran">
+            <img src="qr.jpg" alt="QRIS pembayaran AXM" loading="lazy">
+          </button>
+        </div>
+        <ol class="steps">
+          <li>Pilih produk lalu tekan Beli sekarang untuk chat admin.</li>
+          <li>Scan QRIS ini dan bayar sesuai harga produk.</li>
+          <li>Kirim bukti bayar ke admin. Proses 1–30 menit.</li>
+        </ol>
+        <a class="btn fx" href="qr.jpg" download="QRIS-UAN-Digital-Store.jpg">Simpan QR</a>
+      </div>
 
-    ctx.fillStyle = '#000'
-    ctx.fillRect(0, 0, W, H)
-
-    drawBackground(ctx)
-    drawStatusBar(ctx, time, carrier)
-
-    const bubble = measureBubble(ctx, text, time)
-    const menuH = 7 * ROW_H
-
-    let barY = 329
-    let bubbleY = 450
-    let menuY = bubbleY + bubble.h + 14
-
-    const overflow = menuY + menuH - (H - 24)
-    if (overflow > 0) {
-        barY -= overflow
-        bubbleY -= overflow
-        menuY -= overflow
-    }
-
-    drawReactionBar(ctx, barY)
-    drawBubble(ctx, bubble, bubbleY, time)
-    drawMenu(ctx, menuY)
-
-    return canvas.toBuffer('image/png')
+      <div class="info glass">
+        <h3>Informasi pemesanan</h3>
+        <ul>
+          <li>Pemesanan mudah</li>
+          <li>Informasi harga jelas</li>
+          <li>Proses estimasi 1–30 menit</li>
+          <li>Bantuan pelanggan</li>
+          <li>Konfirmasi detail paket sebelum pembayaran</li>
+        </ul>
+        <div class="guarantee">
+          <div class="g">🛡️</div>
+          <div><b>100% Amanah</b><span>Gagal aktivasi, uang 100% dikembalikan.</span></div>
+        </div>
+      </div>
+      <div class="foot">© 2026 UAN Digital Store<br>Digital products • Premium service</div>
+    </div>`;
+  return s;
 }
 
-// ===== Handler plugin =====
-let handler = async (m, { conn, text, usedPrefix, command }) => {
-    if (!text) {
-        throw `Contoh:\n${usedPrefix + command} hallo\n${usedPrefix + command} teks|18:44\n${usedPrefix + command} teks|18:44|INDOSAT OORE...`
-    }
+urutan.forEach((id, i) => {
+  pager.appendChild(id === "qr" ? slideQR() : slideProduk(id, i === 0));
 
-    await loadFonts()
+  const b = document.createElement("button");
+  b.type = "button";
+  const label = id === "qr" ? "qr" : produk[id].tab;
+  b.setAttribute("aria-label", label);
+  b.innerHTML = (id === "qr" ? iconQR : `<img class="ico" src="${produk[id].logo}" alt="">`) + label;
+  dock.appendChild(b);
+});
 
-    let [msg, time, carrier] = text.split('|').map(v => v.trim())
-    if (!time) {
-        time = new Date()
-            .toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' })
-            .replace('.', ':')
-    }
-    if (!carrier) carrier = 'INDOSAT OORE...'
+const btns = [...dock.querySelectorAll("button")];
 
-    const buffer = render(msg, time, carrier)
-    await conn.sendFile(m.chat, buffer, 'iqc.png', '✅ Selesai', m)
+/* Riak air saat sentuh */
+document.addEventListener("pointerdown", e => {
+  const el = e.target.closest(".fx");
+  if (!el) return;
+  el.classList.add("touch");
+  const r = el.getBoundingClientRect();
+  const rip = document.createElement("span");
+  rip.className = "ripple";
+  rip.style.left = (e.clientX - r.left) + "px";
+  rip.style.top = (e.clientY - r.top) + "px";
+  rip.addEventListener("animationend", () => rip.remove());
+  el.appendChild(rip);
+});
+["pointerup", "pointercancel", "pointerleave"].forEach(ev =>
+  document.addEventListener(ev, () => document.querySelectorAll(".fx.touch").forEach(x => x.classList.remove("touch")), true)
+);
+
+/* Suara geser */
+let audioCtx = null, soundOn = true, lastIdx = 0, lastTick = 0;
+try { soundOn = localStorage.getItem("uan_sound") !== "off"; } catch (e) {}
+
+function unlockAudio() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audioCtx = new AC();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+["pointerdown", "touchstart", "keydown"].forEach(ev =>
+  document.addEventListener(ev, unlockAudio, { passive: true })
+);
+
+function playTick() {
+  if (!soundOn || !audioCtx || audioCtx.state !== "running") return;
+  const now = audioCtx.currentTime;
+  if (now - lastTick < 0.06) return;
+  lastTick = now;
+
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = "sine";
+  o.frequency.setValueAtTime(420, now);
+  o.frequency.exponentialRampToValueAtTime(980, now + 0.09);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.14, now + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(now);
+  o.stop(now + 0.2);
+
+  if (navigator.vibrate) navigator.vibrate(8);
 }
 
-handler.help = ['iqc <teks>|<jam>|<operator>']
-handler.tags = ['maker']
-handler.command = /^(iqc|ioschat)$/i
+const sndBtn = document.getElementById("snd");
+function renderSnd() { sndBtn.textContent = soundOn ? "🔊" : "🔇"; }
+sndBtn.addEventListener("click", () => {
+  soundOn = !soundOn;
+  try { localStorage.setItem("uan_sound", soundOn ? "on" : "off"); } catch (e) {}
+  renderSnd();
+  if (soundOn) { unlockAudio(); playTick(); }
+});
+renderSnd();
 
-export default handler
+/* Lensa mengikuti geseran halaman */
+let dragging = false, moveTimer, ticking = false;
+
+function setK(k) {
+  dock.style.setProperty("--k", k);
+  const n = Math.round(k);
+  btns.forEach((b, i) => b.classList.toggle("on", i === n));
+  if (n !== lastIdx) { lastIdx = n; playTick(); }
+}
+function goTo(i) {
+  pager.scrollTo({ left: i * pager.clientWidth, behavior: "smooth" });
+}
+
+pager.addEventListener("scroll", () => {
+  dock.classList.add("moving");
+  clearTimeout(moveTimer);
+  moveTimer = setTimeout(() => dock.classList.remove("moving"), 160);
+  if (dragging || ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    ticking = false;
+    setK(Math.max(0, Math.min(N - 1, pager.scrollLeft / pager.clientWidth)));
+  });
+}, { passive: true });
+
+/* Ketuk atau geser lensa */
+function posToK(e) {
+  const r = dock.getBoundingClientRect();
+  const w = (r.width - 10) / N;
+  return Math.max(0, Math.min(N - 1, (e.clientX - r.left - 5) / w - 0.5));
+}
+dock.addEventListener("pointerdown", e => {
+  dragging = true;
+  dock.classList.add("moving");
+  dock.setPointerCapture(e.pointerId);
+  setK(posToK(e));
+});
+dock.addEventListener("pointermove", e => { if (dragging) setK(posToK(e)); });
+dock.addEventListener("pointerup", e => {
+  if (!dragging) return;
+  dragging = false;
+  dock.classList.remove("moving");
+  const i = Math.round(posToK(e));
+  setK(i);
+  goTo(i);
+});
+dock.addEventListener("pointercancel", () => { dragging = false; dock.classList.remove("moving"); });
+
+/* Keyboard */
+const lb = document.getElementById("lightbox");
+const lbImg = document.getElementById("lightbox-img");
+
+document.addEventListener("keydown", e => {
+  const i = Math.round(pager.scrollLeft / pager.clientWidth);
+  if (e.key === "ArrowRight" && i < N - 1) goTo(i + 1);
+  if (e.key === "ArrowLeft" && i > 0) goTo(i - 1);
+  if (e.key === "Escape") lb.classList.remove("open");
+});
+window.addEventListener("resize", () => setK(pager.scrollLeft / pager.clientWidth));
+
+/* Perbesar gambar */
+document.addEventListener("click", e => {
+  const z = e.target.closest("[data-zoom]");
+  if (z) { lbImg.src = z.dataset.zoom; lb.classList.add("open"); return; }
+  if (e.target.closest("#lightbox")) lb.classList.remove("open");
+});
+
+setK(0);
+</script>
+
+</body>
+</html>
