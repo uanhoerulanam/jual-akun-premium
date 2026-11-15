@@ -1,13 +1,24 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#080a10">
+<meta name="theme-color" content="#05030d">
 <title>UAN DIGITAL STORE</title>
+<link rel="icon" href="logo.jpg">
 
 <style>
+:root {
+  --bg: #05030d;
+  --card: #0e0a1f;
+  --line: #2a2150;
+  --blue: #2f6bff;
+  --purple: #b43cff;
+  --silver: #f2f4ff;
+  --muted: #a9a6c4;
+  --grad: linear-gradient(90deg, var(--blue), var(--purple));
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -16,25 +27,49 @@
 }
 
 body {
-  background: #080a10;
-  color: white;
+  background: var(--bg);
+  color: var(--silver);
 }
 
 header {
   padding: 22px 15px;
-  background: #11151e;
-  border-bottom: 1px solid #263142;
+  background: #0a0718;
+  border-bottom: 1px solid var(--line);
   text-align: center;
+  position: relative;
+}
+
+header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--grad);
+}
+
+.logo {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 10px;
+  box-shadow: -6px 0 22px rgba(47,107,255,.55), 6px 0 22px rgba(180,60,255,.55);
 }
 
 header h1 {
-  color: #72f0ae;
   font-size: 25px;
   letter-spacing: 1px;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 header p {
-  color: #999;
+  color: var(--muted);
   font-size: 12px;
   margin-top: 7px;
 }
@@ -42,7 +77,10 @@ header p {
 .hero {
   padding: 45px 18px;
   text-align: center;
-  background: radial-gradient(circle at top, #15372c, #080a10 70%);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(47,107,255,.35), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(180,60,255,.35), transparent 55%),
+    var(--bg);
 }
 
 .hero h2 {
@@ -51,11 +89,14 @@ header p {
 }
 
 .hero h2 span {
-  color: #72f0ae;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .hero p {
-  color: #aaa;
+  color: var(--muted);
   line-height: 1.7;
   font-size: 14px;
 }
@@ -67,9 +108,12 @@ header p {
 }
 
 .heading {
-  color: #72f0ae;
+  color: var(--silver);
   margin-bottom: 20px;
   font-size: 21px;
+  padding-left: 12px;
+  border-left: 4px solid;
+  border-image: linear-gradient(var(--blue), var(--purple)) 1;
 }
 
 .products {
@@ -79,10 +123,16 @@ header p {
 }
 
 .product {
-  background: #141923;
-  border: 1px solid #293346;
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: 15px;
   overflow: hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.product:hover {
+  border-color: var(--purple);
+  box-shadow: -4px 0 18px rgba(47,107,255,.3), 4px 0 18px rgba(180,60,255,.3);
 }
 
 .product img {
@@ -90,6 +140,7 @@ header p {
   height: 190px;
   object-fit: cover;
   display: block;
+  background: #15102c;
 }
 
 .product-content {
@@ -102,16 +153,32 @@ header p {
 }
 
 .product p {
-  color: #aaa;
+  color: var(--muted);
   font-size: 12px;
   line-height: 1.6;
 }
 
-.price {
-  font-size: 23px;
-  color: #72f0ae;
-  font-weight: bold;
+.price-box {
   margin: 15px 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.old {
+  color: #7d7a99;
+  font-size: 14px;
+  text-decoration: line-through;
+}
+
+.price {
+  font-size: 24px;
+  font-weight: bold;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .buy {
@@ -119,8 +186,8 @@ header p {
   width: 100%;
   padding: 13px;
   text-align: center;
-  background: linear-gradient(90deg, #72f0ae, #31bb83);
-  color: #07150e;
+  background: var(--grad);
+  color: #fff;
   border-radius: 9px;
   font-size: 14px;
   font-weight: bold;
@@ -128,25 +195,30 @@ header p {
 }
 
 .buy:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.15);
+}
+
+.buy:focus-visible {
+  outline: 2px solid var(--silver);
+  outline-offset: 2px;
 }
 
 .info {
   margin-top: 30px;
   padding: 22px;
-  background: #141923;
-  border: 1px solid #293346;
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: 14px;
   text-align: center;
 }
 
 .info h3 {
-  color: #72f0ae;
+  color: var(--silver);
   margin-bottom: 10px;
 }
 
 .info p {
-  color: #aaa;
+  color: var(--muted);
   font-size: 13px;
   line-height: 1.8;
 }
@@ -154,9 +226,9 @@ header p {
 footer {
   text-align: center;
   padding: 25px 15px;
-  color: #777;
+  color: #77749a;
   font-size: 12px;
-  border-top: 1px solid #293346;
+  border-top: 1px solid var(--line);
   margin-top: 30px;
 }
 
@@ -175,6 +247,7 @@ footer {
 <body>
 
 <header>
+  <img class="logo" src="logo.jpg" alt="Logo UAN Digital Store">
   <h1>UAN DIGITAL STORE</h1>
   <p>PREMIUM DIGITAL PRODUCTS</p>
 </header>
@@ -195,7 +268,7 @@ footer {
 
 <!-- WINK -->
 <div class="product">
-  <img src="assets/wink.jpg" alt="WINK Premium">
+  <img src="wink.jpg" alt="WINK Premium">
   <div class="product-content">
     <h3>WINK VIP+ PREMIUM</h3>
     <p>
@@ -203,8 +276,11 @@ footer {
       HD Photo Enhancement.<br>
       HD Video Enhancement.
     </p>
-    <div class="price">Rp31.900</div>
-    <a class="buy" href="#" onclick="buy('WINK VIP+ PREMIUM','Rp31.900','7 Hari');return false">
+    <div class="price-box">
+      <span class="old">Rp31.900</span>
+      <span class="price">Rp5.000</span>
+    </div>
+    <a class="buy" href="#" onclick="buy('WINK VIP+ PREMIUM','Rp5.000','7 Hari');return false">
       BUY NOW →
     </a>
   </div>
@@ -212,7 +288,7 @@ footer {
 
 <!-- ALIGHT MOTION -->
 <div class="product">
-  <img src="assets/alight-motion.jpg" alt="Alight Motion">
+  <img src="alightmotion.jpg" alt="Alight Motion">
   <div class="product-content">
     <h3>ALIGHT MOTION PREMIUM</h3>
     <p>
@@ -220,8 +296,11 @@ footer {
       Fitur Premium sesuai paket.<br>
       Untuk kebutuhan editing video.
     </p>
-    <div class="price">Rp119.000</div>
-    <a class="buy" href="#" onclick="buy('ALIGHT MOTION PREMIUM','Rp119.000','1 Tahun');return false">
+    <div class="price-box">
+      <span class="old">Rp119.000</span>
+      <span class="price">Rp5.000</span>
+    </div>
+    <a class="buy" href="#" onclick="buy('ALIGHT MOTION PREMIUM','Rp5.000','1 Tahun');return false">
       BUY NOW →
     </a>
   </div>
@@ -229,14 +308,18 @@ footer {
 
 <!-- YOUTUBE -->
 <div class="product">
+  <img src="youtube.jpg" alt="YouTube Premium">
   <div class="product-content">
     <h3>YOUTUBE PREMIUM</h3>
     <p>
       Masa aktif 1 bulan.<br>
       Fitur Premium sesuai paket.
     </p>
-    <div class="price">Rp69.000</div>
-    <a class="buy" href="#" onclick="buy('YOUTUBE PREMIUM','Rp69.000','1 Bulan');return false">
+    <div class="price-box">
+      <span class="old">Rp69.000</span>
+      <span class="price">Rp5.000</span>
+    </div>
+    <a class="buy" href="#" onclick="buy('YOUTUBE PREMIUM','Rp5.000','1 Bulan');return false">
       BUY NOW →
     </a>
   </div>
@@ -244,15 +327,19 @@ footer {
 
 <!-- BSTATION -->
 <div class="product">
-  <img src="assets/bstation-logo.jpg" alt="Bstation">
+  <img src="bstation.jpg" alt="Bstation">
   <div class="product-content">
     <h3>BSTATION PREMIUM</h3>
     <p>
-      Akses fitur Premium.<br>
-      Detail paket dikonfirmasi admin.
+      Masa aktif 7 hari.<br>
+      Akun private.<br>
+      Akses fitur Premium.
     </p>
-    <div class="price">Rp12.000</div>
-    <a class="buy" href="#" onclick="buy('BSTATION PREMIUM','Rp12.000','Konfirmasi admin');return false">
+    <div class="price-box">
+      <span class="old">Rp12.000</span>
+      <span class="price">Rp5.000</span>
+    </div>
+    <a class="buy" href="#" onclick="buy('BSTATION PREMIUM (PRIVATE)','Rp5.000','7 Hari');return false">
       BUY NOW →
     </a>
   </div>
