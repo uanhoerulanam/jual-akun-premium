@@ -4,376 +4,331 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#05030d">
-<title>UAN DIGITAL STORE</title>
+<title>UAN Digital Store</title>
 <link rel="icon" href="logo.jpg">
 
 <style>
 :root {
   --bg: #05030d;
-  --card: #0e0a1f;
-  --line: #2a2150;
   --blue: #2f6bff;
   --purple: #b43cff;
   --silver: #f2f4ff;
   --muted: #a9a6c4;
+  --glass: rgba(255,255,255,.06);
+  --glass-line: rgba(255,255,255,.14);
   --grad: linear-gradient(90deg, var(--blue), var(--purple));
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Arial, sans-serif;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--silver);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-header {
-  padding: 22px 15px;
-  background: #0a0718;
-  border-bottom: 1px solid var(--line);
-  text-align: center;
-  position: relative;
-}
-
-header::after {
+/* Cahaya latar blur */
+body::before, body::after {
   content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: var(--grad);
+  position: fixed;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: .5;
+  z-index: -1;
+  pointer-events: none;
+}
+body::before { background: var(--blue); top: -160px; left: -160px; }
+body::after  { background: var(--purple); bottom: -160px; right: -160px; }
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 8px 32px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
 }
 
-.logo {
-  width: 84px;
-  height: 84px;
+/* Navbar */
+.nav {
+  position: sticky;
+  top: 12px;
+  z-index: 10;
+  max-width: 940px;
+  margin: 12px auto 0;
+  padding: 10px 16px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav img {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  display: block;
-  margin: 0 auto 10px;
-  box-shadow: -6px 0 22px rgba(47,107,255,.55), 6px 0 22px rgba(180,60,255,.55);
+  box-shadow: 0 0 14px rgba(47,107,255,.6), 0 0 14px rgba(180,60,255,.5);
 }
+.nav b { font-size: 16px; letter-spacing: .3px; }
+.nav small { display: block; font-size: 11px; color: var(--muted); }
 
-header h1 {
-  font-size: 25px;
-  letter-spacing: 1px;
-  background: var(--grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-header p {
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 7px;
-}
-
+/* Hero */
 .hero {
-  padding: 45px 18px;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 64px 20px 36px;
   text-align: center;
-  background:
-    radial-gradient(circle at 20% 0%, rgba(47,107,255,.35), transparent 55%),
-    radial-gradient(circle at 80% 0%, rgba(180,60,255,.35), transparent 55%),
-    var(--bg);
 }
-
-.hero h2 {
-  font-size: 32px;
-  margin-bottom: 12px;
+.hero h1 {
+  font-size: clamp(30px, 6vw, 46px);
+  line-height: 1.15;
+  margin-bottom: 14px;
 }
-
-.hero h2 span {
+.grad-text {
   background: var(--grad);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-
 .hero p {
+  max-width: 480px;
+  margin: 0 auto;
   color: var(--muted);
   line-height: 1.7;
-  font-size: 14px;
+  font-size: 15px;
 }
 
-.container {
-  max-width: 900px;
-  margin: auto;
-  padding: 25px 15px;
-}
-
-.heading {
-  color: var(--silver);
-  margin-bottom: 20px;
-  font-size: 21px;
-  padding-left: 12px;
-  border-left: 4px solid;
-  border-image: linear-gradient(var(--blue), var(--purple)) 1;
-}
+/* Produk */
+.container { max-width: 940px; margin: 0 auto; padding: 10px 16px 30px; }
+.title { font-size: 20px; margin-bottom: 18px; }
 
 .products {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 18px;
 }
 
 .product {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 15px;
+  border-radius: 20px;
   overflow: hidden;
-  transition: border-color .2s, box-shadow .2s;
+  display: flex;
+  flex-direction: column;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
 }
-
 .product:hover {
-  border-color: var(--purple);
-  box-shadow: -4px 0 18px rgba(47,107,255,.3), 4px 0 18px rgba(180,60,255,.3);
+  transform: translateY(-4px);
+  border-color: rgba(180,60,255,.6);
+  box-shadow: 0 12px 40px rgba(47,107,255,.25), 0 12px 40px rgba(180,60,255,.2);
 }
 
-.product img {
+.thumb { position: relative; }
+.thumb img {
   width: 100%;
   height: 190px;
   object-fit: cover;
   display: block;
-  background: #15102c;
+  background: rgba(255,255,255,.04);
 }
-
-.product-content {
-  padding: 16px;
+.thumb::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 60px;
+  background: linear-gradient(transparent, rgba(5,3,13,.7));
 }
-
-.product h3 {
-  font-size: 16px;
-  margin-bottom: 9px;
-}
-
-.product p {
-  color: var(--muted);
+.badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 5px 11px;
+  border-radius: 999px;
   font-size: 12px;
-  line-height: 1.6;
-}
-
-.price-box {
-  margin: 15px 0;
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.old {
-  color: #7d7a99;
-  font-size: 14px;
-  text-decoration: line-through;
-}
-
-.price {
-  font-size: 24px;
-  font-weight: bold;
+  font-weight: 700;
   background: var(--grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  box-shadow: 0 4px 14px rgba(180,60,255,.45);
 }
+
+.body { padding: 18px; display: flex; flex-direction: column; flex: 1; }
+.body h3 { font-size: 17px; margin-bottom: 4px; }
+.duration { font-size: 12px; color: var(--purple); font-weight: 600; margin-bottom: 10px; }
+
+.body ul { list-style: none; color: var(--muted); font-size: 13px; line-height: 1.8; flex: 1; }
+.body li::before { content: "✓ "; color: var(--blue); font-weight: 700; }
+
+.price-box { display: flex; align-items: baseline; gap: 10px; margin: 16px 0 14px; }
+.old { color: #7d7a99; font-size: 14px; text-decoration: line-through; }
+.price { font-size: 26px; font-weight: 800; }
 
 .buy {
   display: block;
   width: 100%;
   padding: 13px;
-  text-align: center;
+  border: 0;
+  border-radius: 12px;
   background: var(--grad);
   color: #fff;
-  border-radius: 9px;
   font-size: 14px;
-  font-weight: bold;
-  text-decoration: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .2s, box-shadow .2s;
 }
+.buy:hover { filter: brightness(1.15); box-shadow: 0 6px 22px rgba(180,60,255,.4); }
+.buy:focus-visible { outline: 2px solid var(--silver); outline-offset: 2px; }
 
-.buy:hover {
-  filter: brightness(1.15);
-}
-
-.buy:focus-visible {
-  outline: 2px solid var(--silver);
-  outline-offset: 2px;
-}
-
+/* Info */
 .info {
-  margin-top: 30px;
-  padding: 22px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  text-align: center;
+  margin-top: 32px;
+  padding: 26px 22px;
+  border-radius: 20px;
 }
-
-.info h3 {
-  color: var(--silver);
-  margin-bottom: 10px;
-}
-
-.info p {
+.info h3 { text-align: center; margin-bottom: 16px; }
+.info ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 20px;
   color: var(--muted);
   font-size: 13px;
-  line-height: 1.8;
 }
+.info li::before { content: "✓ "; color: var(--purple); font-weight: 700; }
 
 footer {
   text-align: center;
-  padding: 25px 15px;
+  padding: 26px 15px 34px;
   color: #77749a;
   font-size: 12px;
-  border-top: 1px solid var(--line);
-  margin-top: 30px;
+  line-height: 1.7;
 }
 
-@media(max-width: 550px) {
-  .products {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 600px) {
+  .products, .info ul { grid-template-columns: 1fr; }
+  .hero { padding-top: 44px; }
+  .thumb img { height: 200px; }
+}
 
-  .product img {
-    height: 210px;
-  }
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto !important; }
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <img class="logo" src="logo.jpg" alt="Logo UAN Digital Store">
-  <h1>UAN DIGITAL STORE</h1>
-  <p>PREMIUM DIGITAL PRODUCTS</p>
-</header>
+<nav class="nav glass">
+  <img src="logo.jpg" alt="Logo UAN Digital Store">
+  <div>
+    <b>UAN Digital Store</b>
+    <small>Premium digital products</small>
+  </div>
+</nav>
 
 <section class="hero">
-  <h2>WELCOME TO <span>UAN STORE</span></h2>
-  <p>
-    Temukan berbagai produk digital favoritmu.
-    Harga jelas, informasi lengkap, dan pemesanan mudah.
-  </p>
+  <h1>Produk digital premium,<br><span class="grad-text">harga mulai Rp5.000</span></h1>
+  <p>Temukan produk digital favoritmu. Harga jelas, informasi lengkap, dan pemesanan mudah lewat WhatsApp.</p>
 </section>
 
 <main class="container">
+  <h2 class="title">Produk kami</h2>
+  <div class="products" id="products"></div>
 
-<h2 class="heading">✦ PRODUK KAMI</h2>
-
-<div class="products">
-
-<!-- WINK -->
-<div class="product">
-  <img src="wink.jpg" alt="WINK Premium">
-  <div class="product-content">
-    <h3>WINK VIP+ PREMIUM</h3>
-    <p>
-      Masa aktif 7 hari.<br>
-      HD Photo Enhancement.<br>
-      HD Video Enhancement.
-    </p>
-    <div class="price-box">
-      <span class="old">Rp31.900</span>
-      <span class="price">Rp5.000</span>
-    </div>
-    <a class="buy" href="#" onclick="buy('WINK VIP+ PREMIUM','Rp5.000','7 Hari');return false">
-      BUY NOW →
-    </a>
-  </div>
-</div>
-
-<!-- ALIGHT MOTION -->
-<div class="product">
-  <img src="alightmotion.jpg" alt="Alight Motion">
-  <div class="product-content">
-    <h3>ALIGHT MOTION PREMIUM</h3>
-    <p>
-      Masa aktif 1 tahun.<br>
-      Fitur Premium sesuai paket.<br>
-      Untuk kebutuhan editing video.
-    </p>
-    <div class="price-box">
-      <span class="old">Rp119.000</span>
-      <span class="price">Rp5.000</span>
-    </div>
-    <a class="buy" href="#" onclick="buy('ALIGHT MOTION PREMIUM','Rp5.000','1 Tahun');return false">
-      BUY NOW →
-    </a>
-  </div>
-</div>
-
-<!-- YOUTUBE -->
-<div class="product">
-  <img src="youtube.jpg" alt="YouTube Premium">
-  <div class="product-content">
-    <h3>YOUTUBE PREMIUM</h3>
-    <p>
-      Masa aktif 1 bulan.<br>
-      Fitur Premium sesuai paket.
-    </p>
-    <div class="price-box">
-      <span class="old">Rp69.000</span>
-      <span class="price">Rp5.000</span>
-    </div>
-    <a class="buy" href="#" onclick="buy('YOUTUBE PREMIUM','Rp5.000','1 Bulan');return false">
-      BUY NOW →
-    </a>
-  </div>
-</div>
-
-<!-- BSTATION -->
-<div class="product">
-  <img src="bstation.jpg" alt="Bstation">
-  <div class="product-content">
-    <h3>BSTATION PREMIUM</h3>
-    <p>
-      Masa aktif 7 hari.<br>
-      Akun private.<br>
-      Akses fitur Premium.
-    </p>
-    <div class="price-box">
-      <span class="old">Rp12.000</span>
-      <span class="price">Rp5.000</span>
-    </div>
-    <a class="buy" href="#" onclick="buy('BSTATION PREMIUM (PRIVATE)','Rp5.000','7 Hari');return false">
-      BUY NOW →
-    </a>
-  </div>
-</div>
-
-</div>
-
-<section class="info">
-  <h3>INFORMASI PEMESANAN</h3>
-  <p>
-    ✓ Pemesanan mudah<br>
-    ✓ Informasi harga jelas<br>
-    ✓ Proses estimasi 1–30 menit<br>
-    ✓ Bantuan pelanggan<br>
-    ✓ Konfirmasi detail paket sebelum pembayaran
-  </p>
-</section>
-
+  <section class="info glass">
+    <h3>Informasi pemesanan</h3>
+    <ul>
+      <li>Pemesanan mudah</li>
+      <li>Informasi harga jelas</li>
+      <li>Proses estimasi 1–30 menit</li>
+      <li>Bantuan pelanggan</li>
+      <li>Konfirmasi detail paket sebelum pembayaran</li>
+    </ul>
+  </section>
 </main>
 
 <footer>
-  © 2026 UAN DIGITAL STORE<br>
-  DIGITAL PRODUCTS • PREMIUM SERVICE
+  © 2026 UAN Digital Store<br>
+  Digital products • Premium service
 </footer>
 
 <script>
-
 // GANTI DENGAN NOMOR WHATSAPP ADMIN
 // Gunakan kode negara 62 tanpa tanda +
-
 const nomorAdmin = "628XXXXXXXXXX";
 
-function buy(nama, harga, durasi) {
+const produk = [
+  {
+    nama: "Wink VIP+ Premium",
+    img: "wink.jpg",
+    durasi: "7 Hari",
+    fitur: ["HD Photo Enhancement", "HD Video Enhancement"],
+    lama: "Rp31.900",
+    baru: "Rp5.000",
+    diskon: "Hemat 84%"
+  },
+  {
+    nama: "Alight Motion Premium",
+    img: "alightmotion.jpg",
+    durasi: "1 Tahun",
+    fitur: ["Fitur Premium sesuai paket", "Untuk kebutuhan editing video"],
+    lama: "Rp119.000",
+    baru: "Rp5.000",
+    diskon: "Hemat 96%"
+  },
+  {
+    nama: "YouTube Premium",
+    img: "youtube.jpg",
+    durasi: "1 Bulan",
+    fitur: ["Fitur Premium sesuai paket"],
+    lama: "Rp69.000",
+    baru: "Rp5.000",
+    diskon: "Hemat 93%"
+  },
+  {
+    nama: "Bstation Premium (Private)",
+    img: "bstation.jpg",
+    durasi: "7 Hari",
+    fitur: ["Akun private", "Akses fitur Premium"],
+    lama: "Rp12.000",
+    baru: "Rp5.000",
+    diskon: "Hemat 58%"
+  }
+];
 
+const wadah = document.getElementById("products");
+
+produk.forEach((p, i) => {
+  const kartu = document.createElement("article");
+  kartu.className = "product glass";
+  kartu.innerHTML = `
+    <div class="thumb">
+      <span class="badge">${p.diskon}</span>
+      <img src="${p.img}" alt="${p.nama}" onerror="this.style.visibility='hidden'">
+    </div>
+    <div class="body">
+      <h3>${p.nama}</h3>
+      <div class="duration">Masa aktif ${p.durasi}</div>
+      <ul>${p.fitur.map(f => `<li>${f}</li>`).join("")}</ul>
+      <div class="price-box">
+        <span class="old">${p.lama}</span>
+        <span class="price grad-text">${p.baru}</span>
+      </div>
+      <button class="buy" type="button" data-i="${i}">Beli sekarang</button>
+    </div>`;
+  wadah.appendChild(kartu);
+});
+
+wadah.addEventListener("click", e => {
+  const tombol = e.target.closest(".buy");
+  if (!tombol) return;
+  const p = produk[tombol.dataset.i];
+  buy(p.nama, p.baru, p.durasi);
+});
+
+function buy(nama, harga, durasi) {
   const pesan =
 `Halo Admin UAN DIGITAL STORE!
 
@@ -387,13 +342,9 @@ Mohon informasi ketersediaan dan cara pembayarannya.
 
 Terima kasih.`;
 
-  const link =
-    "https://wa.me/" + nomorAdmin +
-    "?text=" + encodeURIComponent(pesan);
-
+  const link = "https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(pesan);
   window.open(link, "_blank");
 }
-
 </script>
 
 </body>
