@@ -14,154 +14,129 @@
   --purple: #b43cff;
   --silver: #f2f4ff;
   --muted: #a9a6c4;
-  --glass: rgba(255,255,255,.06);
-  --glass-line: rgba(255,255,255,.14);
+  --line: rgba(255,255,255,.15);
   --grad: linear-gradient(90deg, var(--blue), var(--purple));
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-html { scroll-behavior: smooth; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
   font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
-  background: var(--bg);
   color: var(--silver);
+  background: var(--bg);
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* Cahaya latar blur */
-body::before, body::after {
-  content: "";
+.bg {
   position: fixed;
-  width: 520px;
-  height: 520px;
-  border-radius: 50%;
-  filter: blur(110px);
-  opacity: .5;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-}
-body::before { background: var(--blue); top: -160px; left: -160px; }
-body::after  { background: var(--purple); bottom: -160px; right: -160px; }
-
-.glass {
-  background: var(--glass);
-  border: 1px solid var(--glass-line);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
-  box-shadow: 0 8px 32px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(47,107,255,.34), transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(180,60,255,.32), transparent 50%),
+    var(--bg);
 }
 
-/* Navbar */
-.nav {
-  position: sticky;
-  top: 12px;
-  z-index: 10;
-  max-width: 940px;
-  margin: 12px auto 0;
-  padding: 10px 16px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.04));
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 18px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.28);
 }
-.nav img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 0 14px rgba(47,107,255,.6), 0 0 14px rgba(180,60,255,.5);
-}
-.nav b { font-size: 16px; letter-spacing: .3px; }
-.nav small { display: block; font-size: 11px; color: var(--muted); }
 
-/* Hero */
-.hero {
-  max-width: 940px;
-  margin: 0 auto;
-  padding: 64px 20px 36px;
-  text-align: center;
+.blur {
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+  border: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.3);
 }
-.hero h1 {
-  font-size: clamp(30px, 6vw, 46px);
-  line-height: 1.15;
-  margin-bottom: 14px;
-}
+
 .grad-text {
   background: var(--grad);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-.hero p {
-  max-width: 480px;
-  margin: 0 auto;
-  color: var(--muted);
-  line-height: 1.7;
-  font-size: 15px;
+
+main { max-width: 920px; margin: 0 auto; padding: 14px 16px 30px; }
+
+/* Navbar */
+.nav {
+  position: sticky;
+  top: 12px;
+  z-index: 10;
+  padding: 10px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
+.nav img {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 12px rgba(47,107,255,.6), 0 0 12px rgba(180,60,255,.5);
+}
+.nav b { font-size: 16px; }
+.nav small { display: block; font-size: 11px; color: var(--muted); }
+
+/* Hero */
+.hero { padding: 40px 6px 26px; text-align: center; }
+.hero h1 { font-size: clamp(26px, 6vw, 42px); line-height: 1.2; margin-bottom: 12px; }
+.hero p { max-width: 460px; margin: 0 auto; color: var(--muted); line-height: 1.7; font-size: 14px; }
+
+.title { font-size: 19px; margin: 6px 4px 16px; }
 
 /* Produk */
-.container { max-width: 940px; margin: 0 auto; padding: 10px 16px 30px; }
-.title { font-size: 20px; margin-bottom: 18px; }
-
-.products {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
+.products { display: grid; grid-template-columns: 1fr; gap: 18px; max-width: 460px; margin: 0 auto; }
+@media (min-width: 640px) {
+  .products { grid-template-columns: repeat(2, 1fr); max-width: none; }
 }
 
-.product {
-  border-radius: 20px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: transform .25s, border-color .25s, box-shadow .25s;
-}
-.product:hover {
-  transform: translateY(-4px);
-  border-color: rgba(180,60,255,.6);
-  box-shadow: 0 12px 40px rgba(47,107,255,.25), 0 12px 40px rgba(180,60,255,.2);
-}
+.product { border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
 
-.thumb { position: relative; }
-.thumb img {
-  width: 100%;
-  height: 190px;
-  object-fit: cover;
+/* Poster tampil penuh, tidak terpotong */
+.poster {
   display: block;
-  background: rgba(255,255,255,.04);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: #000;
+  cursor: zoom-in;
+  position: relative;
 }
-.thumb::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 60px;
-  background: linear-gradient(transparent, rgba(5,3,13,.7));
+.poster img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 .badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 2;
+  top: 10px; left: 10px;
   padding: 5px 11px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
   background: var(--grad);
-  box-shadow: 0 4px 14px rgba(180,60,255,.45);
+  box-shadow: 0 4px 12px rgba(180,60,255,.45);
+}
+.zoom {
+  position: absolute;
+  right: 10px; bottom: 10px;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(5,3,13,.6);
+  border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
 }
 
-.body { padding: 18px; display: flex; flex-direction: column; flex: 1; }
-.body h3 { font-size: 17px; margin-bottom: 4px; }
-.duration { font-size: 12px; color: var(--purple); font-weight: 600; margin-bottom: 10px; }
-
-.body ul { list-style: none; color: var(--muted); font-size: 13px; line-height: 1.8; flex: 1; }
-.body li::before { content: "✓ "; color: var(--blue); font-weight: 700; }
-
-.price-box { display: flex; align-items: baseline; gap: 10px; margin: 16px 0 14px; }
+.body { padding: 16px; }
+.body h3 { font-size: 17px; }
+.duration { font-size: 12px; color: var(--muted); margin: 3px 0 12px; }
+.price-box { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
 .old { color: #7d7a99; font-size: 14px; text-decoration: line-through; }
 .price { font-size: 26px; font-weight: 800; }
 
@@ -176,68 +151,140 @@ body::after  { background: var(--purple); bottom: -160px; right: -160px; }
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: filter .2s, box-shadow .2s;
 }
-.buy:hover { filter: brightness(1.15); box-shadow: 0 6px 22px rgba(180,60,255,.4); }
-.buy:focus-visible { outline: 2px solid var(--silver); outline-offset: 2px; }
+.buy:active { filter: brightness(1.15); }
+.buy:focus-visible, .poster:focus-visible, .btn:focus-visible { outline: 2px solid var(--silver); outline-offset: 2px; }
+
+/* Pembayaran */
+.pay { margin-top: 34px; padding: 20px; border-radius: 22px; }
+.pay h2 { font-size: 19px; margin-bottom: 6px; }
+.pay > p { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+
+.qr-wrap { max-width: 380px; margin: 0 auto 16px; }
+.qr-wrap .poster { border-radius: 16px; overflow: hidden; }
+
+.steps { list-style: none; counter-reset: s; display: grid; gap: 10px; margin-bottom: 16px; }
+.steps li {
+  counter-increment: s;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.steps li::before {
+  content: counter(s);
+  flex-shrink: 0;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--grad);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.btn {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.07);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.btn:active { background: rgba(255,255,255,.16); }
 
 /* Info */
-.info {
-  margin-top: 32px;
-  padding: 26px 22px;
-  border-radius: 20px;
-}
-.info h3 { text-align: center; margin-bottom: 16px; }
-.info ul {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px 20px;
-  color: var(--muted);
-  font-size: 13px;
-}
+.info { margin-top: 22px; padding: 22px; border-radius: 20px; }
+.info h3 { text-align: center; margin-bottom: 14px; }
+.info ul { list-style: none; display: grid; grid-template-columns: 1fr; gap: 9px; color: var(--muted); font-size: 13px; }
+@media (min-width: 640px) { .info ul { grid-template-columns: repeat(2, 1fr); } }
 .info li::before { content: "✓ "; color: var(--purple); font-weight: 700; }
 
-footer {
-  text-align: center;
-  padding: 26px 15px 34px;
-  color: #77749a;
-  font-size: 12px;
-  line-height: 1.7;
+footer { text-align: center; padding: 26px 15px 34px; color: #77749a; font-size: 12px; line-height: 1.7; }
+
+/* Lightbox */
+#lightbox {
+  position: fixed; inset: 0;
+  z-index: 100;
+  background: rgba(0,0,0,.92);
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+  cursor: zoom-out;
+}
+#lightbox.open { opacity: 1; pointer-events: auto; }
+#lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto; height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+#lightbox .x {
+  position: absolute; top: 14px; right: 14px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
 }
 
-@media (max-width: 600px) {
-  .products, .info ul { grid-template-columns: 1fr; }
-  .hero { padding-top: 44px; }
-  .thumb img { height: 200px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; scroll-behavior: auto !important; }
-}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 
 <body>
+<div class="bg"></div>
 
-<nav class="nav glass">
-  <img src="logo.jpg" alt="Logo UAN Digital Store">
-  <div>
-    <b>UAN Digital Store</b>
-    <small>Premium digital products</small>
-  </div>
-</nav>
+<main>
 
-<section class="hero">
-  <h1>Produk digital premium,<br><span class="grad-text">harga mulai Rp5.000</span></h1>
-  <p>Temukan produk digital favoritmu. Harga jelas, informasi lengkap, dan pemesanan mudah lewat WhatsApp.</p>
-</section>
+  <nav class="nav blur">
+    <img src="logo.jpg" alt="Logo UAN Digital Store">
+    <div>
+      <b>UAN Digital Store</b>
+      <small>Premium digital products</small>
+    </div>
+  </nav>
 
-<main class="container">
+  <section class="hero">
+    <h1>Produk digital premium,<br><span class="grad-text">harga mulai Rp5.000</span></h1>
+    <p>Pilih produk, chat admin lewat WhatsApp, lalu bayar mudah pakai QRIS.</p>
+  </section>
+
   <h2 class="title">Produk kami</h2>
   <div class="products" id="products"></div>
 
-  <section class="info glass">
+  <section class="pay card" id="pembayaran">
+    <h2>Pembayaran QRIS</h2>
+    <p>Satu QR untuk semua pembayaran. Bisa lewat e-wallet atau m-banking apa saja.</p>
+
+    <div class="qr-wrap">
+      <button type="button" class="poster" data-zoom="qr.jpg" aria-label="Perbesar QR pembayaran">
+        <img src="qr.jpg" alt="QRIS pembayaran AXM">
+        <span class="zoom">⤢</span>
+      </button>
+    </div>
+
+    <ol class="steps">
+      <li>Pilih produk di atas lalu tekan Beli sekarang untuk chat admin.</li>
+      <li>Scan QRIS ini dan bayar sesuai harga produk.</li>
+      <li>Kirim bukti pembayaran ke admin. Pesanan diproses 1–30 menit.</li>
+    </ol>
+
+    <a class="btn" href="qr.jpg" download="QRIS-UAN-Digital-Store.jpg">Simpan QR</a>
+  </section>
+
+  <section class="info card">
     <h3>Informasi pemesanan</h3>
     <ul>
       <li>Pemesanan mudah</li>
@@ -247,6 +294,7 @@ footer {
       <li>Konfirmasi detail paket sebelum pembayaran</li>
     </ul>
   </section>
+
 </main>
 
 <footer>
@@ -254,77 +302,50 @@ footer {
   Digital products • Premium service
 </footer>
 
+<div id="lightbox" role="dialog" aria-label="Gambar diperbesar">
+  <div class="x">✕</div>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
 <script>
 // GANTI DENGAN NOMOR WHATSAPP ADMIN
 // Gunakan kode negara 62 tanpa tanda +
 const nomorAdmin = "628XXXXXXXXXX";
 
 const produk = [
-  {
-    nama: "Wink VIP+ Premium",
-    img: "wink.jpg",
-    durasi: "7 Hari",
-    fitur: ["HD Photo Enhancement", "HD Video Enhancement"],
-    lama: "Rp31.900",
-    baru: "Rp5.000",
-    diskon: "Hemat 84%"
-  },
-  {
-    nama: "Alight Motion Premium",
-    img: "alightmotion.jpg",
-    durasi: "1 Tahun",
-    fitur: ["Fitur Premium sesuai paket", "Untuk kebutuhan editing video"],
-    lama: "Rp119.000",
-    baru: "Rp5.000",
-    diskon: "Hemat 96%"
-  },
-  {
-    nama: "YouTube Premium",
-    img: "youtube.jpg",
-    durasi: "1 Bulan",
-    fitur: ["Fitur Premium sesuai paket"],
-    lama: "Rp69.000",
-    baru: "Rp5.000",
-    diskon: "Hemat 93%"
-  },
-  {
-    nama: "Bstation Premium (Private)",
-    img: "bstation.jpg",
-    durasi: "7 Hari",
-    fitur: ["Akun private", "Akses fitur Premium"],
-    lama: "Rp12.000",
-    baru: "Rp5.000",
-    diskon: "Hemat 58%"
-  }
+  { nama: "Wink VIP+ Premium",          img: "wink.jpg",        durasi: "7 Hari",  lama: "Rp31.900",  baru: "Rp5.000", diskon: "Hemat 84%" },
+  { nama: "Alight Motion Premium",      img: "alightmotion.jpg", durasi: "1 Tahun", lama: "Rp119.000", baru: "Rp5.000", diskon: "Hemat 96%" },
+  { nama: "YouTube Premium",            img: "youtube.jpg",     durasi: "1 Bulan", lama: "Rp69.000",  baru: "Rp5.000", diskon: "Hemat 93%" },
+  { nama: "Bstation Premium (Private)", img: "bstation.jpg",    durasi: "7 Hari",  lama: "Rp12.000",  baru: "Rp5.000", diskon: "Hemat 58%" }
 ];
 
 const wadah = document.getElementById("products");
 
 produk.forEach((p, i) => {
-  const kartu = document.createElement("article");
-  kartu.className = "product glass";
-  kartu.innerHTML = `
-    <div class="thumb">
+  const el = document.createElement("article");
+  el.className = "product card";
+  el.innerHTML = `
+    <button type="button" class="poster" data-zoom="${p.img}" aria-label="Perbesar poster ${p.nama}">
+      <img src="${p.img}" alt="Poster ${p.nama}" loading="lazy">
       <span class="badge">${p.diskon}</span>
-      <img src="${p.img}" alt="${p.nama}" onerror="this.style.visibility='hidden'">
-    </div>
+      <span class="zoom">⤢</span>
+    </button>
     <div class="body">
       <h3>${p.nama}</h3>
       <div class="duration">Masa aktif ${p.durasi}</div>
-      <ul>${p.fitur.map(f => `<li>${f}</li>`).join("")}</ul>
       <div class="price-box">
         <span class="old">${p.lama}</span>
         <span class="price grad-text">${p.baru}</span>
       </div>
       <button class="buy" type="button" data-i="${i}">Beli sekarang</button>
     </div>`;
-  wadah.appendChild(kartu);
+  wadah.appendChild(el);
 });
 
 wadah.addEventListener("click", e => {
-  const tombol = e.target.closest(".buy");
-  if (!tombol) return;
-  const p = produk[tombol.dataset.i];
+  const b = e.target.closest(".buy");
+  if (!b) return;
+  const p = produk[b.dataset.i];
   buy(p.nama, p.baru, p.durasi);
 });
 
@@ -338,13 +359,28 @@ Produk: ${nama}
 Harga: ${harga}
 Masa aktif: ${durasi}
 
-Mohon informasi ketersediaan dan cara pembayarannya.
+Pembayaran via QRIS. Mohon konfirmasi ketersediaan.
 
 Terima kasih.`;
-
-  const link = "https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(pesan);
-  window.open(link, "_blank");
+  window.open("https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(pesan), "_blank");
 }
+
+/* Perbesar gambar */
+const lb = document.getElementById("lightbox");
+const lbImg = document.getElementById("lightbox-img");
+
+document.addEventListener("click", e => {
+  const z = e.target.closest("[data-zoom]");
+  if (z) {
+    lbImg.src = z.dataset.zoom;
+    lb.classList.add("open");
+    return;
+  }
+  if (e.target.closest("#lightbox")) lb.classList.remove("open");
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") lb.classList.remove("open");
+});
 </script>
 
 </body>
