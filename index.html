@@ -159,7 +159,7 @@ body {
 }
 @keyframes rip { from { transform: scale(0); opacity: 1; } to { transform: scale(15); opacity: 0; } }
 
-/* Slide pembayaran */
+/* Halaman pembayaran */
 .pay h2 { font-size: 19px; margin-bottom: 6px; }
 .pay p { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 14px; }
 .qr { max-width: 300px; margin: 0 auto 14px; }
@@ -229,11 +229,21 @@ body {
   border: 0; background: none;
   color: var(--muted);
   font-size: 10.5px; font-weight: 600;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
   cursor: pointer; transition: color .2s;
 }
-.dock button span { font-size: 16px; line-height: 1.2; }
 .dock button.on { color: #fff; }
+
+/* Ikon logo di dock */
+.ico {
+  display: block;
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  pointer-events: none;
+}
+
 .dock button:focus-visible, .buy:focus-visible, .btn:focus-visible, .poster:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 /* Lightbox */
@@ -282,29 +292,66 @@ body {
 <script>
 const nomorAdmin = "6285136446443";
 
-const produk = [
-  { nama: "Wink VIP+ Premium", ico: "✨", tab: "Wink", img: "wink.jpg", durasi: "7 Hari", lama: "Rp31.900", baru: "Rp5.000", diskon: "Hemat 84%",
-    pesan: "Halo, Bang! Saya ingin order Wink VIP+ Premium 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏" },
-  { nama: "Alight Motion Premium", ico: "🎬", tab: "Alight", img: "Alightmotion.jpg", durasi: "1 Tahun", lama: "Rp119.000", baru: "Rp5.000", diskon: "Hemat 96%",
-    pesan: "Halo, Bang. Mau order AM Premium 1 tahun pakai Gmail sendiri, harga 5K." },
-  { nama: "YouTube Premium", ico: "▶️", tab: "YouTube", img: "youtube.jpg", durasi: "1 Bulan", lama: "Rp69.000", baru: "Rp5.000", diskon: "Hemat 93%",
-    pesan: "Halo, Bang! Saya ingin order YouTube Premium 1 Bulan seharga Rp5.000. Apakah stok masih tersedia? 🙏" },
-  { nama: "Bstation Premium (Private)", ico: "📺", tab: "Bstation", img: "bstation.jpg", durasi: "7 Hari", lama: "Rp12.000", baru: "Rp5.000", diskon: "Hemat 58%",
-    pesan: "Halo, Bang! Saya ingin order Bstation Premium Private 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏" }
-];
+/* Data produk */
+const produk = {
+  am: {
+    nama: "Alight Motion Premium", tab: "am", logo: "alightmotionlogo.jpg",
+    img: "Alightmotion.jpg", durasi: "1 Tahun", lama: "Rp119.000", baru: "Rp5.000", diskon: "Hemat 96%",
+    pesan: "Halo, Bang. Mau order AM Premium 1 tahun pakai Gmail sendiri, harga 5K."
+  },
+  wink: {
+    nama: "Wink VIP+ Premium", tab: "wink", logo: "winklogo.jpg",
+    img: "wink.jpg", durasi: "7 Hari", lama: "Rp31.900", baru: "Rp5.000", diskon: "Hemat 84%",
+    pesan: "Halo, Bang! Saya ingin order Wink VIP+ Premium 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  },
+  yt: {
+    nama: "YouTube Premium", tab: "yt", logo: "youtubelogo.jpg",
+    img: "youtube.jpg", durasi: "1 Bulan", lama: "Rp69.000", baru: "Rp5.000", diskon: "Hemat 93%",
+    pesan: "Halo, Bang! Saya ingin order YouTube Premium 1 Bulan seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  },
+  bstation: {
+    nama: "Bstation Premium (Private)", tab: "bstation", logo: "bstationlogo.jpg",
+    img: "bstation.jpg", durasi: "7 Hari", lama: "Rp12.000", baru: "Rp5.000", diskon: "Hemat 58%",
+    pesan: "Halo, Bang! Saya ingin order Bstation Premium Private 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  }
+};
+
+/* Urutan halaman & navbar: QR di tengah */
+const urutan = ["am", "wink", "qr", "yt", "bstation"];
+const N = urutan.length;
+
+const iconQR = `
+<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+  <rect width="24" height="24" rx="7" fill="#fff"/>
+  <g fill="#1a1440">
+    <rect x="4.5" y="4.5" width="6" height="6" rx="1"/>
+    <rect x="13.5" y="4.5" width="6" height="6" rx="1"/>
+    <rect x="4.5" y="13.5" width="6" height="6" rx="1"/>
+    <rect x="13.5" y="13.5" width="2.6" height="2.6"/>
+    <rect x="17" y="17" width="2.6" height="2.6"/>
+    <rect x="17" y="13.5" width="2.6" height="2.6"/>
+    <rect x="13.5" y="17" width="2.6" height="2.6"/>
+  </g>
+  <g fill="#fff">
+    <rect x="6.2" y="6.2" width="2.6" height="2.6"/>
+    <rect x="15.2" y="6.2" width="2.6" height="2.6"/>
+    <rect x="6.2" y="15.2" width="2.6" height="2.6"/>
+  </g>
+</svg>`;
 
 const pager = document.getElementById("pager");
 const dock = document.getElementById("dock");
 
 /* Halaman produk: 1 halaman = 1 banner */
-produk.forEach((p, i) => {
+function slideProduk(id, first) {
+  const p = produk[id];
   const s = document.createElement("section");
   s.className = "slide";
   s.innerHTML = `
     <div class="in">
       <div class="poster-box">
         <button type="button" class="poster fx" data-zoom="${p.img}" aria-label="Perbesar poster ${p.nama}">
-          <img src="${p.img}" alt="Poster ${p.nama}" ${i > 0 ? 'loading="lazy"' : ''}>
+          <img src="${p.img}" alt="Poster ${p.nama}" ${first ? "" : 'loading="lazy"'}>
           <span class="badge">${p.diskon}</span>
         </button>
       </div>
@@ -313,68 +360,71 @@ produk.forEach((p, i) => {
           <div><h3>${p.nama}</h3><small>Masa aktif ${p.durasi}</small></div>
           <div class="prices"><span class="old">${p.lama}</span><span class="price">${p.baru}</span></div>
         </div>
-        <button class="buy fx" type="button" data-i="${i}">Beli sekarang</button>
+        <button class="buy fx" type="button" data-id="${id}">Beli sekarang</button>
       </div>
     </div>`;
-  pager.appendChild(s);
-});
+  return s;
+}
 
 /* Halaman pembayaran + info */
-const pay = document.createElement("section");
-pay.className = "slide";
-pay.innerHTML = `
-  <div class="in pay">
-    <div class="panel glass">
-      <h2>Pembayaran QRIS</h2>
-      <p>Satu QR untuk semua pembayaran. Bisa lewat e-wallet atau m-banking apa saja.</p>
-      <div class="qr">
-        <button type="button" class="poster fx" data-zoom="qr.jpg" aria-label="Perbesar QR pembayaran">
-          <img src="qr.jpg" alt="QRIS pembayaran AXM" loading="lazy">
-        </button>
+function slideQR() {
+  const s = document.createElement("section");
+  s.className = "slide";
+  s.innerHTML = `
+    <div class="in pay">
+      <div class="panel glass">
+        <h2>Pembayaran QRIS</h2>
+        <p>Satu QR untuk semua pembayaran. Bisa lewat e-wallet atau m-banking apa saja.</p>
+        <div class="qr">
+          <button type="button" class="poster fx" data-zoom="qr.jpg" aria-label="Perbesar QR pembayaran">
+            <img src="qr.jpg" alt="QRIS pembayaran AXM" loading="lazy">
+          </button>
+        </div>
+        <ol class="steps">
+          <li>Pilih produk lalu tekan Beli sekarang untuk chat admin.</li>
+          <li>Scan QRIS ini dan bayar sesuai harga produk.</li>
+          <li>Kirim bukti bayar ke admin. Proses 1–30 menit.</li>
+        </ol>
+        <a class="btn fx" href="qr.jpg" download="QRIS-UAN-Digital-Store.jpg">Simpan QR</a>
       </div>
-      <ol class="steps">
-        <li>Pilih produk lalu tekan Beli sekarang untuk chat admin.</li>
-        <li>Scan QRIS ini dan bayar sesuai harga produk.</li>
-        <li>Kirim bukti bayar ke admin. Proses 1–30 menit.</li>
-      </ol>
-      <a class="btn fx" href="qr.jpg" download="QRIS-UAN-Digital-Store.jpg">Simpan QR</a>
-    </div>
 
-    <div class="info glass">
-      <h3>Informasi pemesanan</h3>
-      <ul>
-        <li>Pemesanan mudah</li>
-        <li>Informasi harga jelas</li>
-        <li>Proses estimasi 1–30 menit</li>
-        <li>Bantuan pelanggan</li>
-        <li>Konfirmasi detail paket sebelum pembayaran</li>
-      </ul>
-      <div class="guarantee">
-        <div class="g">🛡️</div>
-        <div><b>100% Amanah</b><span>Gagal aktivasi, uang 100% dikembalikan.</span></div>
+      <div class="info glass">
+        <h3>Informasi pemesanan</h3>
+        <ul>
+          <li>Pemesanan mudah</li>
+          <li>Informasi harga jelas</li>
+          <li>Proses estimasi 1–30 menit</li>
+          <li>Bantuan pelanggan</li>
+          <li>Konfirmasi detail paket sebelum pembayaran</li>
+        </ul>
+        <div class="guarantee">
+          <div class="g">🛡️</div>
+          <div><b>100% Amanah</b><span>Gagal aktivasi, uang 100% dikembalikan.</span></div>
+        </div>
       </div>
-    </div>
-    <div class="foot">© 2026 UAN Digital Store<br>Digital products • Premium service</div>
-  </div>`;
-pager.appendChild(pay);
+      <div class="foot">© 2026 UAN Digital Store<br>Digital products • Premium service</div>
+    </div>`;
+  return s;
+}
 
-/* Tombol dock */
-const tabs = [...produk.map(p => ({ ico: p.ico, tab: p.tab })), { ico: "💳", tab: "QRIS" }];
-tabs.forEach(t => {
+urutan.forEach((id, i) => {
+  pager.appendChild(id === "qr" ? slideQR() : slideProduk(id, i === 0));
+
   const b = document.createElement("button");
   b.type = "button";
-  b.setAttribute("aria-label", t.tab);
-  b.innerHTML = `<span>${t.ico}</span>${t.tab}`;
+  const label = id === "qr" ? "qr" : produk[id].tab;
+  b.setAttribute("aria-label", label);
+  b.innerHTML = (id === "qr" ? iconQR : `<img class="ico" src="${produk[id].logo}" alt="">`) + label;
   dock.appendChild(b);
 });
+
 const btns = [...dock.querySelectorAll("button")];
-const N = tabs.length;
 
 /* Beli */
 pager.addEventListener("click", e => {
   const b = e.target.closest(".buy");
   if (!b) return;
-  const p = produk[b.dataset.i];
+  const p = produk[b.dataset.id];
   window.open("https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(p.pesan), "_blank");
 });
 
@@ -443,6 +493,9 @@ dock.addEventListener("pointerup", e => {
 dock.addEventListener("pointercancel", () => { dragging = false; dock.classList.remove("moving"); });
 
 /* Keyboard */
+const lb = document.getElementById("lightbox");
+const lbImg = document.getElementById("lightbox-img");
+
 document.addEventListener("keydown", e => {
   const i = Math.round(pager.scrollLeft / pager.clientWidth);
   if (e.key === "ArrowRight" && i < N - 1) goTo(i + 1);
@@ -452,8 +505,6 @@ document.addEventListener("keydown", e => {
 window.addEventListener("resize", () => setK(pager.scrollLeft / pager.clientWidth));
 
 /* Perbesar gambar */
-const lb = document.getElementById("lightbox");
-const lbImg = document.getElementById("lightbox-img");
 document.addEventListener("click", e => {
   const z = e.target.closest("[data-zoom]");
   if (z) { lbImg.src = z.dataset.zoom; lb.classList.add("open"); return; }
