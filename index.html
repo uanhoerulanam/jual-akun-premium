@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#05030d">
 <title>UAN Digital Store</title>
 <link rel="icon" href="logo.jpg">
@@ -13,336 +13,266 @@
   --blue: #2f6bff;
   --purple: #b43cff;
   --silver: #f2f4ff;
-  --muted: #a9a6c4;
-  --line: rgba(255,255,255,.15);
+  --muted: #b4b2d0;
   --grad: linear-gradient(90deg, var(--blue), var(--purple));
+  --k: 0;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+html, body { height: 100%; }
 body {
   font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
   color: var(--silver);
   background: var(--bg);
-  min-height: 100vh;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
     radial-gradient(circle at 0% 0%, rgba(47,107,255,.34), transparent 50%),
     radial-gradient(circle at 100% 100%, rgba(180,60,255,.32), transparent 50%),
     var(--bg);
 }
 
-.card {
-  background: linear-gradient(180deg, rgba(255,255,255,.11), rgba(255,255,255,.04));
-  border: 1px solid var(--line);
-  box-shadow: 0 6px 18px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.28);
+/* Kaca air bening putih */
+.glass {
+  background: linear-gradient(160deg, rgba(255,255,255,.26), rgba(255,255,255,.07) 40%, rgba(255,255,255,.12));
+  border: 1px solid rgba(255,255,255,.38);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,.3),
+    inset 0 1px 0 rgba(255,255,255,.75),
+    inset 0 -1px 0 rgba(255,255,255,.15),
+    inset 0 0 18px rgba(255,255,255,.07);
 }
-
 .blur {
-  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
-  border: 1px solid var(--line);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 6px 20px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.3);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
 }
 
 .grad-text {
   background: var(--grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-main { max-width: 920px; margin: 0 auto; padding: 14px 16px 30px; }
-
-/* Navbar */
-.nav {
-  position: sticky;
-  top: 12px;
-  z-index: 10;
-  padding: 10px 16px;
+/* Header */
+.top {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  left: 50%; transform: translateX(-50%);
+  width: calc(100% - 24px); max-width: 460px;
+  z-index: 20;
+  padding: 8px 14px;
   border-radius: 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: flex; align-items: center; gap: 11px;
 }
-.nav img {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
+.top img {
+  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
   box-shadow: 0 0 12px rgba(47,107,255,.6), 0 0 12px rgba(180,60,255,.5);
 }
-.nav b { font-size: 16px; }
-.nav small { display: block; font-size: 11px; color: var(--muted); }
+.top b { font-size: 15px; }
+.top small { display: block; font-size: 11px; color: var(--muted); }
 
-/* Hero */
-.hero { padding: 40px 6px 26px; text-align: center; }
-.hero h1 { font-size: clamp(26px, 6vw, 42px); line-height: 1.2; margin-bottom: 12px; }
-.hero p { max-width: 460px; margin: 0 auto; color: var(--muted); line-height: 1.7; font-size: 14px; }
-
-.title { font-size: 19px; margin: 6px 4px 16px; }
-
-/* Produk */
-.products { display: grid; grid-template-columns: 1fr; gap: 18px; max-width: 460px; margin: 0 auto; }
-@media (min-width: 640px) {
-  .products { grid-template-columns: repeat(2, 1fr); max-width: none; }
+/* Pager geser */
+.pager {
+  position: fixed; inset: 0;
+  display: flex;
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
 }
+.pager::-webkit-scrollbar { display: none; }
 
-.product { border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
+.slide {
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(74px + env(safe-area-inset-top, 0px)) 14px calc(96px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; align-items: center;
+}
+.slide > .in { width: 100%; max-width: 460px; margin: auto; }
 
+/* Poster utuh, tidak terpotong */
+.poster-box { display: flex; justify-content: center; margin-bottom: 12px; }
 .poster {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: #000;
-  cursor: zoom-in;
   position: relative;
+  display: block;
+  padding: 0; border: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: zoom-in;
+  background: #000;
+  box-shadow: 0 10px 30px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.3), 0 0 26px rgba(255,255,255,.12);
 }
-.poster img { display: block; width: 100%; height: auto; }
+.poster img {
+  display: block;
+  max-width: 100%;
+  max-height: max(230px, calc(100dvh - 340px));
+  width: auto; height: auto;
+}
 .badge {
-  position: absolute;
-  top: 10px; left: 10px;
-  padding: 5px 11px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  background: var(--grad);
-  box-shadow: 0 4px 12px rgba(180,60,255,.45);
-}
-.zoom {
-  position: absolute;
-  right: 10px; bottom: 10px;
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  background: rgba(5,3,13,.6);
-  border: 1px solid var(--line);
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px;
+  position: absolute; top: 10px; left: 10px;
+  padding: 5px 11px; border-radius: 999px;
+  font-size: 12px; font-weight: 700; color: #1a1440;
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 3px 10px rgba(0,0,0,.3);
 }
 
-.body { padding: 16px; }
-.body h3 { font-size: 17px; }
-.duration { font-size: 12px; color: var(--muted); margin: 3px 0 12px; }
-.price-box { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-.old { color: #7d7a99; font-size: 14px; text-decoration: line-through; }
-.price { font-size: 26px; font-weight: 800; }
+/* Panel beli */
+.panel { border-radius: 20px; padding: 14px 16px 16px; }
+.row { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; margin-bottom: 12px; }
+.row h3 { font-size: 16px; line-height: 1.25; }
+.row small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.prices { text-align: right; flex-shrink: 0; }
+.old { display: block; color: #8b88a8; font-size: 12px; text-decoration: line-through; }
+.price { font-size: 25px; font-weight: 800; color: #fff; text-shadow: 0 0 16px rgba(255,255,255,.45); line-height: 1.1; }
 
-.buy {
-  display: block;
-  width: 100%;
+.buy, .btn {
+  display: block; width: 100%;
   padding: 13px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--grad);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
+  border: 0; border-radius: 14px;
+  font-size: 14px; font-weight: 700;
+  text-align: center; text-decoration: none;
   cursor: pointer;
+  color: #1a1440;
+  background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(214,228,255,.88));
+  box-shadow: 0 6px 18px rgba(255,255,255,.18), inset 0 1px 0 #fff, inset 0 -2px 6px rgba(120,150,255,.25);
 }
-.buy:active { filter: brightness(1.15); }
-.buy:focus-visible, .poster:focus-visible, .btn:focus-visible { outline: 2px solid var(--silver); outline-offset: 2px; }
 
-/* Pembayaran */
-.pay { margin-top: 34px; padding: 20px; border-radius: 22px; }
+/* Efek sentuh air */
+.fx { position: relative; overflow: hidden; transition: transform .15s; }
+.fx > * { position: relative; z-index: 2; }
+.fx.touch { transform: scale(.975); }
+.ripple {
+  position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.75);
+  background: radial-gradient(circle, rgba(255,255,255,.3), transparent 70%);
+  pointer-events: none; z-index: 1;
+  animation: rip .75s ease-out forwards;
+}
+@keyframes rip { from { transform: scale(0); opacity: 1; } to { transform: scale(15); opacity: 0; } }
+
+/* Slide pembayaran */
 .pay h2 { font-size: 19px; margin-bottom: 6px; }
-.pay > p { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
-
-.qr-wrap { max-width: 380px; margin: 0 auto 16px; }
-.qr-wrap .poster { border-radius: 16px; overflow: hidden; }
-
-.steps { list-style: none; counter-reset: s; display: grid; gap: 10px; margin-bottom: 16px; }
-.steps li {
-  counter-increment: s;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.5;
-}
+.pay p { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 14px; }
+.qr { max-width: 300px; margin: 0 auto 14px; }
+.qr .poster { width: 100%; }
+.qr .poster img { max-height: none; width: 100%; }
+.steps { list-style: none; counter-reset: s; display: grid; gap: 9px; margin-bottom: 14px; }
+.steps li { counter-increment: s; display: flex; gap: 11px; font-size: 13px; color: var(--muted); line-height: 1.5; }
 .steps li::before {
-  content: counter(s);
-  flex-shrink: 0;
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: var(--grad);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
+  content: counter(s); flex-shrink: 0;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(255,255,255,.9); color: #1a1440;
+  font-size: 12px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
-
-.btn {
-  display: block;
-  text-align: center;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.07);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-}
-.btn:active { background: rgba(255,255,255,.16); }
-
-/* Informasi pemesanan */
-.info { margin-top: 22px; padding: 22px 20px; border-radius: 22px; }
-.info h3 { text-align: center; font-size: 18px; margin-bottom: 16px; }
-.info ul {
-  list-style: none;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 11px;
-  margin-bottom: 18px;
-}
-@media (min-width: 640px) { .info ul { grid-template-columns: repeat(2, 1fr); } }
-.info li {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.5;
-}
+.info { margin-top: 14px; border-radius: 20px; padding: 18px 16px; }
+.info h3 { text-align: center; font-size: 16px; margin-bottom: 12px; }
+.info ul { list-style: none; display: grid; gap: 9px; margin-bottom: 14px; }
+.info li { display: flex; gap: 10px; font-size: 13px; color: var(--muted); line-height: 1.5; }
 .info li::before {
-  content: "✓";
-  flex-shrink: 0;
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  background: var(--grad);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  margin-top: 1px;
+  content: "✓"; flex-shrink: 0;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(255,255,255,.9); color: #1a1440;
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; margin-top: 1px;
 }
-
 .guarantee {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(180,60,255,.5);
-  background: linear-gradient(135deg, rgba(47,107,255,.18), rgba(180,60,255,.18));
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.4);
+  background: linear-gradient(135deg, rgba(255,255,255,.2), rgba(255,255,255,.06));
 }
-.guarantee .g-ic { font-size: 28px; flex-shrink: 0; }
-.guarantee b { display: block; font-size: 15px; margin-bottom: 2px; }
-.guarantee span { font-size: 13px; color: var(--silver); line-height: 1.5; }
+.guarantee .g { font-size: 26px; }
+.guarantee b { display: block; font-size: 15px; }
+.guarantee span { font-size: 13px; line-height: 1.5; }
+.foot { text-align: center; font-size: 12px; color: #77749a; margin-top: 18px; line-height: 1.7; }
 
-footer { text-align: center; padding: 26px 15px 34px; color: #77749a; font-size: 12px; line-height: 1.7; }
+/* Dock lensa */
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(94vw, 400px);
+  padding: 5px;
+  border-radius: 999px;
+  display: flex;
+  touch-action: pan-y;
+  user-select: none; -webkit-user-select: none;
+}
+.lens {
+  position: absolute; top: 5px; bottom: 5px; left: 5px;
+  width: calc((100% - 10px) / 5);
+  border-radius: 999px;
+  background:
+    radial-gradient(120% 140% at 30% 0%, rgba(255,255,255,.7), rgba(255,255,255,.14) 60%),
+    rgba(255,255,255,.1);
+  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 6px rgba(255,255,255,.25), 0 3px 14px rgba(255,255,255,.2);
+  transform: translateX(calc(var(--k) * 100%));
+  transition: scale .35s cubic-bezier(.34,1.6,.5,1);
+  pointer-events: none;
+}
+.dock.moving .lens { scale: 1.16 1.1; }
+.dock button {
+  position: relative; z-index: 1; flex: 1;
+  padding: 7px 0 6px;
+  border: 0; background: none;
+  color: var(--muted);
+  font-size: 10.5px; font-weight: 600;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  cursor: pointer; transition: color .2s;
+}
+.dock button span { font-size: 16px; line-height: 1.2; }
+.dock button.on { color: #fff; }
+.dock button:focus-visible, .buy:focus-visible, .btn:focus-visible, .poster:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 /* Lightbox */
 #lightbox {
-  position: fixed; inset: 0;
-  z-index: 100;
-  background: rgba(0,0,0,.92);
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,.93);
   display: flex; align-items: center; justify-content: center;
   padding: 12px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .2s;
-  cursor: zoom-out;
+  opacity: 0; pointer-events: none; transition: opacity .2s; cursor: zoom-out;
 }
 #lightbox.open { opacity: 1; pointer-events: auto; }
-#lightbox img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto; height: auto;
-  object-fit: contain;
-  border-radius: 10px;
-}
+#lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; }
 #lightbox .x {
   position: absolute; top: 14px; right: 14px;
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.1);
-  color: #fff;
-  font-size: 18px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,.15); color: #fff; font-size: 18px;
   display: flex; align-items: center; justify-content: center;
 }
 
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 
 <body>
 <div class="bg"></div>
 
-<main>
+<header class="top glass blur">
+  <img src="logo.jpg" alt="Logo UAN Digital Store">
+  <div>
+    <b>UAN Digital Store</b>
+    <small>Geser untuk lihat produk →</small>
+  </div>
+</header>
 
-  <nav class="nav blur">
-    <img src="logo.jpg" alt="Logo UAN Digital Store">
-    <div>
-      <b>UAN Digital Store</b>
-      <small>Premium digital products</small>
-    </div>
-  </nav>
+<main class="pager" id="pager"></main>
 
-  <section class="hero">
-    <h1>Produk digital premium,<br><span class="grad-text">harga mulai Rp5.000</span></h1>
-    <p>Pilih produk, chat admin lewat WhatsApp, lalu bayar mudah pakai QRIS.</p>
-  </section>
-
-  <h2 class="title">Produk kami</h2>
-  <div class="products" id="products"></div>
-
-  <section class="pay card" id="pembayaran">
-    <h2>Pembayaran QRIS</h2>
-    <p>Satu QR untuk semua pembayaran. Bisa lewat e-wallet atau m-banking apa saja.</p>
-
-    <div class="qr-wrap">
-      <button type="button" class="poster" data-zoom="qr.jpg" aria-label="Perbesar QR pembayaran">
-        <img src="qr.jpg" alt="QRIS pembayaran AXM">
-        <span class="zoom">⤢</span>
-      </button>
-    </div>
-
-    <ol class="steps">
-      <li>Pilih produk di atas lalu tekan Beli sekarang untuk chat admin.</li>
-      <li>Scan QRIS ini dan bayar sesuai harga produk.</li>
-      <li>Kirim bukti pembayaran ke admin. Pesanan diproses 1–30 menit.</li>
-    </ol>
-
-    <a class="btn" href="qr.jpg" download="QRIS-UAN-Digital-Store.jpg">Simpan QR</a>
-  </section>
-
-  <section class="info card">
-    <h3>Informasi pemesanan</h3>
-    <ul>
-      <li>Pemesanan mudah</li>
-      <li>Informasi harga jelas</li>
-      <li>Proses estimasi 1–30 menit</li>
-      <li>Bantuan pelanggan</li>
-      <li>Konfirmasi detail paket sebelum pembayaran</li>
-    </ul>
-    <div class="guarantee">
-      <div class="g-ic">🛡️</div>
-      <div>
-        <b>100% Amanah</b>
-        <span>Gagal aktivasi, uang 100% dikembalikan.</span>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<footer>
-  © 2026 UAN Digital Store<br>
-  Digital products • Premium service
-</footer>
+<nav class="dock glass blur" id="dock" aria-label="Navigasi halaman">
+  <div class="lens" aria-hidden="true"></div>
+</nav>
 
 <div id="lightbox" role="dialog" aria-label="Gambar diperbesar">
   <div class="x">✕</div>
@@ -350,94 +280,187 @@ footer { text-align: center; padding: 26px 15px 34px; color: #77749a; font-size:
 </div>
 
 <script>
-// Nomor WhatsApp admin (kode negara 62, tanpa +)
 const nomorAdmin = "6285136446443";
 
 const produk = [
-  {
-    nama: "Wink VIP+ Premium",
-    img: "wink.jpg",
-    durasi: "7 Hari",
-    lama: "Rp31.900",
-    baru: "Rp5.000",
-    diskon: "Hemat 84%",
-    pesan: "Halo, Bang! Saya ingin order Wink VIP+ Premium 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏"
-  },
-  {
-    nama: "Alight Motion Premium",
-    img: "Alightmotion.jpg",
-    durasi: "1 Tahun",
-    lama: "Rp119.000",
-    baru: "Rp5.000",
-    diskon: "Hemat 96%",
-    pesan: "Halo, Bang. Mau order AM Premium 1 tahun pakai Gmail sendiri, harga 5K."
-  },
-  {
-    nama: "YouTube Premium",
-    img: "youtube.jpg",
-    durasi: "1 Bulan",
-    lama: "Rp69.000",
-    baru: "Rp5.000",
-    diskon: "Hemat 93%",
-    pesan: "Halo, Bang! Saya ingin order YouTube Premium 1 Bulan seharga Rp5.000. Apakah stok masih tersedia? 🙏"
-  },
-  {
-    nama: "Bstation Premium (Private)",
-    img: "bstation.jpg",
-    durasi: "7 Hari",
-    lama: "Rp12.000",
-    baru: "Rp5.000",
-    diskon: "Hemat 58%",
-    pesan: "Halo, Bang! Saya ingin order Bstation Premium Private 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏"
-  }
+  { nama: "Wink VIP+ Premium", ico: "✨", tab: "Wink", img: "wink.jpg", durasi: "7 Hari", lama: "Rp31.900", baru: "Rp5.000", diskon: "Hemat 84%",
+    pesan: "Halo, Bang! Saya ingin order Wink VIP+ Premium 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏" },
+  { nama: "Alight Motion Premium", ico: "🎬", tab: "Alight", img: "Alightmotion.jpg", durasi: "1 Tahun", lama: "Rp119.000", baru: "Rp5.000", diskon: "Hemat 96%",
+    pesan: "Halo, Bang. Mau order AM Premium 1 tahun pakai Gmail sendiri, harga 5K." },
+  { nama: "YouTube Premium", ico: "▶️", tab: "YouTube", img: "youtube.jpg", durasi: "1 Bulan", lama: "Rp69.000", baru: "Rp5.000", diskon: "Hemat 93%",
+    pesan: "Halo, Bang! Saya ingin order YouTube Premium 1 Bulan seharga Rp5.000. Apakah stok masih tersedia? 🙏" },
+  { nama: "Bstation Premium (Private)", ico: "📺", tab: "Bstation", img: "bstation.jpg", durasi: "7 Hari", lama: "Rp12.000", baru: "Rp5.000", diskon: "Hemat 58%",
+    pesan: "Halo, Bang! Saya ingin order Bstation Premium Private 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏" }
 ];
 
-const wadah = document.getElementById("products");
+const pager = document.getElementById("pager");
+const dock = document.getElementById("dock");
 
+/* Halaman produk: 1 halaman = 1 banner */
 produk.forEach((p, i) => {
-  const el = document.createElement("article");
-  el.className = "product card";
-  el.innerHTML = `
-    <button type="button" class="poster" data-zoom="${p.img}" aria-label="Perbesar poster ${p.nama}">
-      <img src="${p.img}" alt="Poster ${p.nama}" loading="lazy">
-      <span class="badge">${p.diskon}</span>
-      <span class="zoom">⤢</span>
-    </button>
-    <div class="body">
-      <h3>${p.nama}</h3>
-      <div class="duration">Masa aktif ${p.durasi}</div>
-      <div class="price-box">
-        <span class="old">${p.lama}</span>
-        <span class="price grad-text">${p.baru}</span>
+  const s = document.createElement("section");
+  s.className = "slide";
+  s.innerHTML = `
+    <div class="in">
+      <div class="poster-box">
+        <button type="button" class="poster fx" data-zoom="${p.img}" aria-label="Perbesar poster ${p.nama}">
+          <img src="${p.img}" alt="Poster ${p.nama}" ${i > 0 ? 'loading="lazy"' : ''}>
+          <span class="badge">${p.diskon}</span>
+        </button>
       </div>
-      <button class="buy" type="button" data-i="${i}">Beli sekarang</button>
+      <div class="panel glass">
+        <div class="row">
+          <div><h3>${p.nama}</h3><small>Masa aktif ${p.durasi}</small></div>
+          <div class="prices"><span class="old">${p.lama}</span><span class="price">${p.baru}</span></div>
+        </div>
+        <button class="buy fx" type="button" data-i="${i}">Beli sekarang</button>
+      </div>
     </div>`;
-  wadah.appendChild(el);
+  pager.appendChild(s);
 });
 
-wadah.addEventListener("click", e => {
+/* Halaman pembayaran + info */
+const pay = document.createElement("section");
+pay.className = "slide";
+pay.innerHTML = `
+  <div class="in pay">
+    <div class="panel glass">
+      <h2>Pembayaran QRIS</h2>
+      <p>Satu QR untuk semua pembayaran. Bisa lewat e-wallet atau m-banking apa saja.</p>
+      <div class="qr">
+        <button type="button" class="poster fx" data-zoom="qr.jpg" aria-label="Perbesar QR pembayaran">
+          <img src="qr.jpg" alt="QRIS pembayaran AXM" loading="lazy">
+        </button>
+      </div>
+      <ol class="steps">
+        <li>Pilih produk lalu tekan Beli sekarang untuk chat admin.</li>
+        <li>Scan QRIS ini dan bayar sesuai harga produk.</li>
+        <li>Kirim bukti bayar ke admin. Proses 1–30 menit.</li>
+      </ol>
+      <a class="btn fx" href="qr.jpg" download="QRIS-UAN-Digital-Store.jpg">Simpan QR</a>
+    </div>
+
+    <div class="info glass">
+      <h3>Informasi pemesanan</h3>
+      <ul>
+        <li>Pemesanan mudah</li>
+        <li>Informasi harga jelas</li>
+        <li>Proses estimasi 1–30 menit</li>
+        <li>Bantuan pelanggan</li>
+        <li>Konfirmasi detail paket sebelum pembayaran</li>
+      </ul>
+      <div class="guarantee">
+        <div class="g">🛡️</div>
+        <div><b>100% Amanah</b><span>Gagal aktivasi, uang 100% dikembalikan.</span></div>
+      </div>
+    </div>
+    <div class="foot">© 2026 UAN Digital Store<br>Digital products • Premium service</div>
+  </div>`;
+pager.appendChild(pay);
+
+/* Tombol dock */
+const tabs = [...produk.map(p => ({ ico: p.ico, tab: p.tab })), { ico: "💳", tab: "QRIS" }];
+tabs.forEach(t => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.setAttribute("aria-label", t.tab);
+  b.innerHTML = `<span>${t.ico}</span>${t.tab}`;
+  dock.appendChild(b);
+});
+const btns = [...dock.querySelectorAll("button")];
+const N = tabs.length;
+
+/* Beli */
+pager.addEventListener("click", e => {
   const b = e.target.closest(".buy");
   if (!b) return;
   const p = produk[b.dataset.i];
   window.open("https://wa.me/" + nomorAdmin + "?text=" + encodeURIComponent(p.pesan), "_blank");
 });
 
+/* Riak air saat sentuh */
+document.addEventListener("pointerdown", e => {
+  const el = e.target.closest(".fx");
+  if (!el) return;
+  el.classList.add("touch");
+  const r = el.getBoundingClientRect();
+  const rip = document.createElement("span");
+  rip.className = "ripple";
+  rip.style.left = (e.clientX - r.left) + "px";
+  rip.style.top = (e.clientY - r.top) + "px";
+  rip.addEventListener("animationend", () => rip.remove());
+  el.appendChild(rip);
+});
+["pointerup", "pointercancel", "pointerleave"].forEach(ev =>
+  document.addEventListener(ev, () => document.querySelectorAll(".fx.touch").forEach(x => x.classList.remove("touch")), true)
+);
+
+/* Lensa mengikuti geseran halaman */
+let dragging = false, moveTimer, ticking = false;
+
+function setK(k) {
+  dock.style.setProperty("--k", k);
+  const n = Math.round(k);
+  btns.forEach((b, i) => b.classList.toggle("on", i === n));
+}
+function goTo(i) {
+  pager.scrollTo({ left: i * pager.clientWidth, behavior: "smooth" });
+}
+
+pager.addEventListener("scroll", () => {
+  dock.classList.add("moving");
+  clearTimeout(moveTimer);
+  moveTimer = setTimeout(() => dock.classList.remove("moving"), 160);
+  if (dragging || ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    ticking = false;
+    setK(Math.max(0, Math.min(N - 1, pager.scrollLeft / pager.clientWidth)));
+  });
+}, { passive: true });
+
+/* Ketuk atau geser lensa */
+function posToK(e) {
+  const r = dock.getBoundingClientRect();
+  const w = (r.width - 10) / N;
+  return Math.max(0, Math.min(N - 1, (e.clientX - r.left - 5) / w - 0.5));
+}
+dock.addEventListener("pointerdown", e => {
+  dragging = true;
+  dock.classList.add("moving");
+  dock.setPointerCapture(e.pointerId);
+  setK(posToK(e));
+});
+dock.addEventListener("pointermove", e => { if (dragging) setK(posToK(e)); });
+dock.addEventListener("pointerup", e => {
+  if (!dragging) return;
+  dragging = false;
+  dock.classList.remove("moving");
+  const i = Math.round(posToK(e));
+  setK(i);
+  goTo(i);
+});
+dock.addEventListener("pointercancel", () => { dragging = false; dock.classList.remove("moving"); });
+
+/* Keyboard */
+document.addEventListener("keydown", e => {
+  const i = Math.round(pager.scrollLeft / pager.clientWidth);
+  if (e.key === "ArrowRight" && i < N - 1) goTo(i + 1);
+  if (e.key === "ArrowLeft" && i > 0) goTo(i - 1);
+  if (e.key === "Escape") lb.classList.remove("open");
+});
+window.addEventListener("resize", () => setK(pager.scrollLeft / pager.clientWidth));
+
 /* Perbesar gambar */
 const lb = document.getElementById("lightbox");
 const lbImg = document.getElementById("lightbox-img");
-
 document.addEventListener("click", e => {
   const z = e.target.closest("[data-zoom]");
-  if (z) {
-    lbImg.src = z.dataset.zoom;
-    lb.classList.add("open");
-    return;
-  }
+  if (z) { lbImg.src = z.dataset.zoom; lb.classList.add("open"); return; }
   if (e.target.closest("#lightbox")) lb.classList.remove("open");
 });
-document.addEventListener("keydown", e => {
-  if (e.key === "Escape") lb.classList.remove("open");
-});
+
+setK(0);
 </script>
 
 </body>
