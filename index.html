@@ -16,6 +16,7 @@
   --muted: #b4b2d0;
   --grad: linear-gradient(90deg, var(--blue), var(--purple));
   --k: 0;
+  --n: 6;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -190,7 +191,7 @@ body {
 .poster img {
   display: block;
   max-width: 100%;
-  max-height: max(230px, calc(100dvh - 340px));
+  max-height: max(220px, calc(100dvh - 375px));
   width: auto; height: auto;
 }
 .badge {
@@ -203,7 +204,7 @@ body {
 
 /* Panel beli */
 .panel { border-radius: 20px; padding: 14px 16px 16px; }
-.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
 .row > div:first-child { min-width: 0; }
 .row h3 { font-size: 16px; line-height: 1.25; }
 .row small { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
@@ -263,6 +264,26 @@ body {
   -webkit-background-clip: text; background-clip: text;
   color: transparent;
   filter: drop-shadow(0 0 10px rgba(255,200,100,.45));
+}
+
+/* Teks download aplikasi */
+.dl {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.store {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.28);
 }
 
 .buy, .btn {
@@ -335,7 +356,7 @@ body {
   bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 30;
-  width: min(94vw, 400px);
+  width: min(95vw, 420px);
   padding: 5px;
   border-radius: 999px;
   display: flex;
@@ -344,7 +365,7 @@ body {
 }
 .lens {
   position: absolute; top: 5px; bottom: 5px; left: 5px;
-  width: calc((100% - 10px) / 5);
+  width: calc((100% - 10px) / var(--n));
   border-radius: 999px;
   background:
     radial-gradient(120% 140% at 30% 0%, rgba(255,255,255,.7), rgba(255,255,255,.14) 60%),
@@ -354,13 +375,14 @@ body {
   transition: scale .35s cubic-bezier(.34,1.6,.5,1);
   pointer-events: none;
 }
-.dock.moving .lens { scale: 1.16 1.1; }
+.dock.moving .lens { scale: 1.12 1.08; }
 .dock button {
   position: relative; z-index: 1; flex: 1;
+  min-width: 0;
   padding: 7px 0 6px;
   border: 0; background: none;
   color: var(--muted);
-  font-size: 10.5px; font-weight: 600;
+  font-size: 10px; font-weight: 600;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   cursor: pointer; transition: color .2s;
 }
@@ -431,19 +453,24 @@ const nomorAdmin = "6285136446443";
 /* Data produk */
 const produk = {
   am: {
-    nama: "Alight Motion Premium", tab: "am", logo: "alightmotionlogo.jpg",
-    img: "Alightmotion.jpg", durasi: "1 Tahun", lama: "Rp119.000", baru: "Rp5.000", diskon: "Hemat 96%",
+    nama: "Alight Motion Premium (Private)", tab: "am", logo: "alightmotionlogo.jpg",
+    img: "alightmotion.jpg", durasi: "1 Tahun", lama: "Rp25.000", baru: "Rp5.000", diskon: "Hemat 80%",
     pesan: "Halo, Bang. Mau order AM Premium 1 tahun pakai Gmail sendiri, harga 5K."
   },
   wink: {
-    nama: "Wink VIP+ Premium", tab: "wink", logo: "winklogo.jpg",
-    img: "wink.jpg", durasi: "7 Hari", lama: "Rp31.900", baru: "Rp5.000", diskon: "Hemat 84%",
+    nama: "Wink VIP+ Premium (Private)", tab: "wink", logo: "winklogo.jpg",
+    img: "wink.jpg", durasi: "7 Hari", lama: "Rp15.000", baru: "Rp5.000", diskon: "Hemat 67%",
     pesan: "Halo, Bang! Saya ingin order Wink VIP+ Premium 7 Hari seharga Rp5.000. Apakah stok masih tersedia? 🙏"
   },
+  beauty: {
+    nama: "BeautyPlus Premium (Private)", tab: "beauty", logo: "beautypluslogo.jpg",
+    img: "beautyplus.jpg", durasi: "", lama: "Rp15.000", baru: "Rp5.000", diskon: "Hemat 67%",
+    pesan: "Halo, Bang! Saya ingin order BeautyPlus Premium Private seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+  },
   yt: {
-    nama: "YouTube Premium", tab: "yt", logo: "youtubelogo.jpg",
-    img: "youtube.jpg", durasi: "1 Bulan", lama: "Rp69.000", baru: "Rp5.000", diskon: "Hemat 93%",
-    pesan: "Halo, Bang! Saya ingin order YouTube Premium 1 Bulan seharga Rp5.000. Apakah stok masih tersedia? 🙏"
+    nama: "YouTube Premium (Private)", tab: "yt", logo: "youtubelogo.jpg",
+    img: "youtube.jpg", durasi: "1 Bulan", lama: "Rp20.000", baru: "Rp5.000", diskon: "Hemat 75%",
+    pesan: "Halo, Bang! Saya ingin order YouTube Premium Private 1 Bulan seharga Rp5.000. Apakah stok masih tersedia? 🙏"
   },
   bstation: {
     nama: "Bstation Premium (Private)", tab: "bstation", logo: "bstationlogo.jpg",
@@ -452,8 +479,8 @@ const produk = {
   }
 };
 
-/* Urutan halaman & navbar: QR di tengah */
-const urutan = ["am", "wink", "qr", "yt", "bstation"];
+/* Urutan halaman & navbar */
+const urutan = ["am", "wink", "beauty", "qr", "yt", "bstation"];
 const N = urutan.length;
 
 const iconQR = `
@@ -477,6 +504,7 @@ const iconQR = `
 
 const pager = document.getElementById("pager");
 const dock = document.getElementById("dock");
+dock.style.setProperty("--n", N);
 
 /* Link WhatsApp (link biasa, tidak diblokir browser) */
 function waLink(p) {
@@ -498,11 +526,16 @@ function slideProduk(id, first) {
       </div>
       <div class="panel glass">
         <div class="row">
-          <div><h3>${p.nama}</h3><small>Masa aktif ${p.durasi}</small></div>
+          <div><h3>${p.nama}</h3><small>${p.durasi ? "Masa aktif " + p.durasi : "Akun private"}</small></div>
           <div class="prices">
             <div class="pr"><span class="lbl dari">DARI</span><span class="old">${p.lama}</span></div>
             <div class="pr"><span class="lbl jadi">JADI</span><span class="price">${p.baru}</span></div>
           </div>
+        </div>
+        <div class="dl">
+          <span>⬇ Download aplikasinya di</span>
+          <span class="store">Play Store</span>
+          <span class="store">App Store</span>
         </div>
         <a class="buy fx" href="${waLink(p)}" target="_blank" rel="noopener noreferrer">Beli sekarang</a>
       </div>
