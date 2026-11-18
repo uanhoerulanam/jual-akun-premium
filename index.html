@@ -20,6 +20,7 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
 
 html, body { height: 100%; }
 body {
@@ -301,7 +302,6 @@ body {
   cursor: pointer;
 }
 .proof b { color: #ffe29a; font-weight: 800; }
-.proof[hidden], .testi[hidden] { display: none; }
 
 .buy, .btn {
   display: block; width: 100%;
@@ -313,6 +313,12 @@ body {
   color: #1a1440;
   background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(214,228,255,.88));
   box-shadow: 0 6px 18px rgba(255,255,255,.18), inset 0 1px 0 #fff, inset 0 -2px 6px rgba(120,150,255,.25);
+}
+/* Tombol hijau Saluran WhatsApp */
+.btn.wa {
+  color: #fff;
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  box-shadow: 0 6px 18px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.45);
 }
 
 /* Efek sentuh air */
@@ -349,17 +355,18 @@ body {
 .testi { margin-top: 14px; border-radius: 20px; padding: 16px; }
 .testi h3 { font-size: 16px; }
 .testi small { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+.testi .btn { margin-top: 10px; }
 .prevgrid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
-  margin: 12px 0;
+  margin: 12px 0 0;
   cursor: pointer;
 }
 .prevgrid img {
-  width: 100%; aspect-ratio: 3 / 4;
-  object-fit: cover;
+  width: 100%; aspect-ratio: 9 / 16;
+  object-fit: contain;
   border-radius: 10px;
   display: block;
-  background: #15102c;
+  background: #0d0a1c;
   border: 1px solid rgba(255,255,255,.18);
 }
 
@@ -459,23 +466,23 @@ body {
 }
 .gal-top b { display: block; font-size: 15px; }
 .gal-top small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+#gal-wa { max-width: 460px; margin: 0 auto 12px; }
+/* Screenshot panjang tampil utuh, 2 kolom */
 .gal-grid {
   max-width: 460px; margin: 0 auto;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
 }
 #gal-more { max-width: 460px; margin: 14px auto 0; }
-#gal-more[hidden] { display: none; }
 .t {
   padding: 0; border: 0;
   border-radius: 12px;
   overflow: hidden;
-  background: #15102c;
-  aspect-ratio: 3 / 4;
+  background: #0d0a1c;
+  aspect-ratio: 9 / 16;
   cursor: zoom-in;
   box-shadow: 0 0 0 1px rgba(255,255,255,.16);
 }
-.t[hidden] { display: none; }
-.t img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.t img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* Lightbox */
 #lightbox {
@@ -504,7 +511,6 @@ body {
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; z-index: 2;
 }
-.lb-nav[hidden], .lb-cnt[hidden] { display: none; }
 .lb-nav.prev { left: 10px; }
 .lb-nav.next { right: 10px; }
 .lb-cnt {
@@ -545,6 +551,7 @@ body {
     <div><b>Testimoni Pembeli</b><small id="gal-sub">Ketuk foto untuk memperbesar</small></div>
     <button type="button" id="gal-x" class="snd" aria-label="Tutup galeri">✕</button>
   </div>
+  <a id="gal-wa" class="btn wa fx" href="https://whatsapp.com/channel/0029Vb8pe7i7dmebUJEHwM40" target="_blank" rel="noopener noreferrer">💬 Lihat lebih banyak di Saluran WA Testimoni</a>
   <div class="gal-grid" id="gal-grid"></div>
   <button type="button" id="gal-more" class="btn fx" hidden>Muat lebih banyak</button>
 </div>
@@ -559,9 +566,11 @@ body {
 
 <script>
 const nomorAdmin = "6285136446443";
+const SALURAN_TESTI = "https://whatsapp.com/channel/0029Vb8pe7i7dmebUJEHwM40";
 
 /* Testimoni: testi1.jpg, testi2.jpg, ... sampai testi999999.jpg
-   Nomor harus berurutan tanpa lompat. Jumlah foto terdeteksi otomatis, tidak perlu diubah. */
+   Nomor BOLEH bolong (asal tidak ada jeda kosong lebih dari ~40 nomor berturut-turut).
+   Jumlah foto terdeteksi otomatis. Nomor terbesar (paling baru) tampil paling depan. */
 const T = { prefix: "testi", max: 999999, ext: "jpg" };
 const tSrc = i => `${T.prefix}${i}.${T.ext}`;
 const tLabel = n => {
@@ -571,7 +580,14 @@ const tLabel = n => {
   return (Math.floor(n / 1000) * 1000).toLocaleString("id-ID") + "+";
 };
 
-/* Cek ada/tidaknya file: permintaan ringan (HEAD), tanpa mengunduh gambar */
+/* Foto kecil diperkecil otomatis lewat wsrv.nl (file asli tidak diubah, jadi cadangan kalau gagal) */
+const CDN = /^https?:$/.test(location.protocol) && !/localhost|127\.0\.0\.1/.test(location.hostname);
+const abs = f => new URL(f, location.href).href;
+const lewat = (f, w, q) => `https://wsrv.nl/?url=${encodeURIComponent(abs(f))}&w=${w}&q=${q}&we&output=webp`;
+const kecil = n => CDN ? lewat(tSrc(n), 360, 70) : tSrc(n);
+const besar = n => CDN ? lewat(tSrc(n), 1080, 85) : tSrc(n);
+
+/* Cek ada/tidaknya file */
 function adaImg(i) {
   return new Promise(res => {
     const im = new Image();
@@ -591,20 +607,22 @@ async function ada(i) {
   }
 }
 
-/* Cari foto terakhir: lompat dua kali lipat (1,2,4,8,...), lalu pencarian biner */
-async function hitungTesti() {
-  if (!(await ada(1))) return 0;
-  let lo = 1, hi = 2;
-  while (hi <= T.max && (await ada(hi))) { lo = hi; hi *= 2; }
-  if (hi > T.max) hi = T.max + 1;
-  while (hi - lo > 1) {
-    const mid = Math.floor((lo + hi) / 2);
-    if (await ada(mid)) lo = mid; else hi = mid;
+/* Pindai per 40 nomor sekaligus, berhenti saat satu blok kosong semua */
+async function cariTesti() {
+  const CH = 40, nomor = [];
+  for (let mulai = 1; mulai <= T.max; mulai += CH) {
+    const akhir = Math.min(mulai + CH - 1, T.max);
+    const cek = [];
+    for (let i = mulai; i <= akhir; i++) cek.push(ada(i).then(ok => (ok ? i : 0)));
+    const hasil = (await Promise.all(cek)).filter(Boolean);
+    if (!hasil.length) break;
+    nomor.push(...hasil);
   }
-  return lo;
+  return nomor.sort((a, b) => b - a);   /* terbaru (nomor terbesar) duluan */
 }
-let jumlah = 0;
-const siap = hitungTesti().then(n => (jumlah = n));
+let daftar = [], jumlah = 0;
+const siap = cariTesti().then(d => { daftar = d; jumlah = d.length; return jumlah; });
+const no = pos => daftar[pos - 1];
 
 /* Data produk */
 const produk = {
@@ -702,10 +720,6 @@ function slideProduk(id, first) {
 
 /* Halaman pembayaran + testimoni + info */
 function slideQR() {
-  const prev = Array.from({ length: 6 }, (_, i) =>
-    `<img src="${tSrc(i + 1)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">`
-  ).join("");
-
   const s = document.createElement("section");
   s.className = "slide";
   s.innerHTML = `
@@ -726,11 +740,12 @@ function slideQR() {
         <a class="btn fx" href="qr.jpg" download="QRIS-UAN-Digital-Store.jpg">Simpan QR</a>
       </div>
 
-      <div class="testi glass" hidden>
+      <div class="testi glass">
         <h3>Testimoni Pembeli</h3>
-        <small><span class="tcount"></span> bukti dari pembeli</small>
-        <div class="prevgrid" data-gal aria-hidden="true">${prev}</div>
-        <button type="button" class="btn fx" data-gal>Lihat semua testimoni</button>
+        <small class="tinfo">Lihat bukti dari pembeli</small>
+        <div class="prevgrid" data-gal aria-hidden="true" hidden></div>
+        <button type="button" class="btn fx" id="btn-semua" data-gal hidden>Lihat semua testimoni</button>
+        <a class="btn wa fx" href="${SALURAN_TESTI}" target="_blank" rel="noopener noreferrer">💬 Saluran WhatsApp Testimoni</a>
       </div>
 
       <div class="info glass">
@@ -765,13 +780,29 @@ urutan.forEach((id, i) => {
 
 const btns = [...dock.querySelectorAll("button")];
 
-/* Tampilkan tombol & kartu testimoni setelah jumlah foto terdeteksi */
+/* Setelah foto testimoni terdeteksi: tampilkan tombol, jumlah, dan pratinjau */
 siap.then(n => {
   const punya = n > 0;
-  document.querySelectorAll(".proof, .testi").forEach(el => { el.hidden = !punya; });
+  document.querySelectorAll(".proof").forEach(el => { el.hidden = !punya; });
   document.querySelectorAll(".tcount").forEach(el => { el.textContent = punya ? tLabel(n) : ""; });
-  const sub = document.getElementById("gal-sub");
-  if (punya) sub.textContent = tLabel(n) + " bukti dari pembeli · ketuk untuk memperbesar";
+  if (!punya) return;
+
+  document.querySelector(".tinfo").textContent = tLabel(n) + " bukti dari pembeli";
+  document.getElementById("gal-sub").textContent = tLabel(n) + " bukti dari pembeli · ketuk untuk memperbesar";
+
+  const prev = document.querySelector(".prevgrid");
+  daftar.slice(0, 3).forEach(num => {
+    const im = new Image();
+    im.loading = "lazy";
+    im.decoding = "async";
+    im.alt = "";
+    let coba = 0;
+    im.onerror = () => { if (coba++ === 0 && CDN) im.src = tSrc(num); else im.style.visibility = "hidden"; };
+    im.src = kecil(num);
+    prev.appendChild(im);
+  });
+  prev.hidden = false;
+  document.getElementById("btn-semua").hidden = false;
 });
 
 /* Riak air saat sentuh */
@@ -899,24 +930,26 @@ const lbNext = document.getElementById("lb-next");
 const lbCnt = document.getElementById("lb-cnt");
 
 let built = 0, galBuilt = false, io = null;
-let curIdx = 0;          /* 0 = zoom biasa (poster/QR), >0 = nomor foto testimoni */
+let curIdx = 0;          /* 0 = zoom biasa (poster/QR), >0 = urutan foto testimoni (1 = terbaru) */
 let swiped = false, sx = null;
 
 function tambahBatch() {
   const end = Math.min(built + BATCH, jumlah);
   const frag = document.createDocumentFragment();
-  for (let i = built + 1; i <= end; i++) {
+  for (let pos = built + 1; pos <= end; pos++) {
+    const num = no(pos);
     const b = document.createElement("button");
     b.type = "button";
     b.className = "t";
-    b.dataset.i = i;
-    b.setAttribute("aria-label", "Testimoni " + i);
+    b.dataset.i = pos;
+    b.setAttribute("aria-label", "Testimoni " + pos);
     const img = new Image();
     img.loading = "lazy";
     img.decoding = "async";
-    img.alt = "Testimoni pembeli " + i;
-    img.onerror = () => { b.hidden = true; };
-    img.src = tSrc(i);
+    img.alt = "Testimoni pembeli " + pos;
+    let coba = 0;
+    img.onerror = () => { if (coba++ === 0 && CDN) img.src = tSrc(num); else b.hidden = true; };
+    img.src = kecil(num);
     b.appendChild(img);
     frag.appendChild(b);
   }
@@ -948,10 +981,16 @@ function bukaGal() {
 function tutupGal() { gal.classList.remove("open"); }
 
 function updCnt() { lbCnt.textContent = curIdx + " / " + jumlah; }
+function tampilBesar() {
+  const num = no(curIdx);
+  let coba = 0;
+  lbImg.onerror = () => { if (coba++ === 0 && CDN) lbImg.src = tSrc(num); };
+  lbImg.src = besar(num);
+}
 function bukaLB(src, idx) {
   curIdx = idx || 0;
-  lbImg.src = src;
   const foto = curIdx > 0;
+  if (foto) tampilBesar(); else { lbImg.onerror = null; lbImg.src = src; }
   lbCnt.hidden = !foto;
   lbPrev.hidden = lbNext.hidden = !(foto && jumlah > 1);
   if (foto) updCnt();
@@ -961,7 +1000,7 @@ function tutupLB() { lb.classList.remove("open"); curIdx = 0; }
 function geser(dir) {
   if (!curIdx || jumlah < 2) return;
   curIdx = ((curIdx - 1 + dir + jumlah) % jumlah) + 1;
-  lbImg.src = tSrc(curIdx);
+  tampilBesar();
   updCnt();
 }
 
@@ -985,7 +1024,7 @@ document.addEventListener("click", e => {
   if (e.target.closest("#lightbox")) { tutupLB(); return; }
 
   const t = e.target.closest(".t");
-  if (t) { const i = +t.dataset.i; bukaLB(tSrc(i), i); return; }
+  if (t) { bukaLB(null, +t.dataset.i); return; }
 
   if (e.target.closest("[data-gal]")) { bukaGal(); return; }
 
