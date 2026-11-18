@@ -569,7 +569,7 @@ const nomorAdmin = "6285136446443";
 const SALURAN_TESTI = "https://whatsapp.com/channel/0029Vb8pe7i7dmebUJEHwM40";
 
 /* Testimoni: testi1.jpg, testi2.jpg, ... sampai testi999999.jpg
-   Nomor BOLEH bolong (asal tidak ada jeda kosong lebih dari ~40 nomor berturut-turut).
+   Nomor BOLEH bolong (jeda kosong sampai 200 nomor berturut-turut masih terbaca).
    Jumlah foto terdeteksi otomatis. Nomor terbesar (paling baru) tampil paling depan. */
 const T = { prefix: "testi", max: 999999, ext: "jpg" };
 const tSrc = i => `${T.prefix}${i}.${T.ext}`;
@@ -607,18 +607,29 @@ async function ada(i) {
   }
 }
 
-/* Pindai per 40 nomor sekaligus, berhenti saat satu blok kosong semua */
+/* Pindai per 40 nomor sekaligus. Boleh bolong sampai 200 nomor berturut-turut. */
+const CH = 40, GAP = 200;
 async function cariTesti() {
-  const CH = 40, nomor = [];
+  try {
+    const c = JSON.parse(localStorage.getItem("testi_cache") || "null");
+    if (c && c.d && c.d.length && Date.now() - c.t < 2 * 60 * 1000) return c.d;
+  } catch (e) {}
+
+  const nomor = [];
+  let kosong = 0;
   for (let mulai = 1; mulai <= T.max; mulai += CH) {
     const akhir = Math.min(mulai + CH - 1, T.max);
     const cek = [];
     for (let i = mulai; i <= akhir; i++) cek.push(ada(i).then(ok => (ok ? i : 0)));
     const hasil = (await Promise.all(cek)).filter(Boolean);
-    if (!hasil.length) break;
-    nomor.push(...hasil);
+    if (hasil.length) { nomor.push(...hasil); kosong = 0; }
+    else { kosong += CH; if (kosong >= GAP) break; }
   }
-  return nomor.sort((a, b) => b - a);   /* terbaru (nomor terbesar) duluan */
+  nomor.sort((a, b) => b - a);   /* terbaru (nomor terbesar) duluan */
+  if (nomor.length) {
+    try { localStorage.setItem("testi_cache", JSON.stringify({ t: Date.now(), d: nomor })); } catch (e) {}
+  }
+  return nomor;
 }
 let daftar = [], jumlah = 0;
 const siap = cariTesti().then(d => { daftar = d; jumlah = d.length; return jumlah; });
