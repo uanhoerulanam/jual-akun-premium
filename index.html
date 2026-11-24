@@ -568,17 +568,13 @@ body {
 const nomorAdmin = "6285136446443";
 const SALURAN_TESTI = "https://whatsapp.com/channel/0029Vb8pe7i7dmebUJEHwM40";
 
-/* Testimoni: testi1.jpg, testi2.jpg, ... sampai testi999999.jpg
-   Nomor BOLEH bolong (jeda kosong sampai 200 nomor berturut-turut masih terbaca).
-   Jumlah foto terdeteksi otomatis. Nomor terbesar (paling baru) tampil paling depan. */
+/* Testimoni: file berawalan "testi" lalu nomor (testi1.jpg, testi25.jpg, "testi 76.jpg" juga terbaca).
+   Daftar foto dibaca langsung dari repo GitHub, jadi nomor boleh bolong dan ekstensi bebas
+   (jpg, jpeg, png, webp). Nomor terbesar (paling baru) tampil paling depan. */
 const T = { prefix: "testi", max: 999999, ext: "jpg" };
-const tSrc = i => `${T.prefix}${i}.${T.ext}`;
-const tLabel = n => {
-  if (n < 10) return String(n);
-  if (n < 100) return (Math.floor(n / 10) * 10) + "+";
-  if (n < 1000) return (Math.floor(n / 100) * 100) + "+";
-  return (Math.floor(n / 1000) * 1000).toLocaleString("id-ID") + "+";
-};
+const namaFile = {};   /* nomor -> nama file asli di repo */
+const tSrc = i => namaFile[i] ? encodeURIComponent(namaFile[i]) : `${T.prefix}${i}.${T.ext}`;
+const tLabel = n => n.toLocaleString("id-ID");   /* jumlah persis, bukan dibulatkan */
 
 /* Foto kecil diperkecil otomatis lewat wsrv.nl (file asli tidak diubah, jadi cadangan kalau gagal) */
 const CDN = /^https?:$/.test(location.protocol) && !/localhost|127\.0\.0\.1/.test(location.hostname);
@@ -587,7 +583,7 @@ const lewat = (f, w, q) => `https://wsrv.nl/?url=${encodeURIComponent(abs(f))}&w
 const kecil = n => CDN ? lewat(tSrc(n), 360, 70) : tSrc(n);
 const besar = n => CDN ? lewat(tSrc(n), 1080, 85) : tSrc(n);
 
-/* Cek ada/tidaknya file */
+/* Cek ada/tidaknya file (dipakai hanya untuk cadangan) */
 function adaImg(i) {
   return new Promise(res => {
     const im = new Image();
@@ -607,14 +603,27 @@ async function ada(i) {
   }
 }
 
-/* Pindai per 40 nomor sekaligus. Boleh bolong sampai 200 nomor berturut-turut. */
-const CH = 40, GAP = 200;
-async function cariTesti() {
-  try {
-    const c = JSON.parse(localStorage.getItem("testi_cache") || "null");
-    if (c && c.d && c.d.length && Date.now() - c.t < 2 * 60 * 1000) return c.d;
-  } catch (e) {}
+/* Utama: baca daftar file dari repo GitHub */
+const GH = { user: "uanhoerulanam", repo: "jual-akun-premium", branch: "main" };
 
+async function dariGitHub() {
+  const r = await fetch(`https://api.github.com/repos/${GH.user}/${GH.repo}/contents/?ref=${GH.branch}`);
+  if (!r.ok) throw new Error("github " + r.status);
+  const files = await r.json();
+  if (!Array.isArray(files)) throw new Error("github format");
+  const pola = new RegExp("^" + T.prefix + "[\\s_-]*(\\d+)\\.(jpe?g|png|webp)$", "i");
+  const nomor = [];
+  files.forEach(f => {
+    const m = pola.exec(f.name);
+    if (m) { const n = +m[1]; namaFile[n] = f.name; nomor.push(n); }
+  });
+  if (!nomor.length) throw new Error("kosong");
+  return nomor;
+}
+
+/* Cadangan kalau GitHub tidak bisa diakses: pindai per 40 nomor (jeda kosong sampai 200 nomor) */
+const CH = 40, GAP = 200;
+async function pindai() {
   const nomor = [];
   let kosong = 0;
   for (let mulai = 1; mulai <= T.max; mulai += CH) {
@@ -625,9 +634,24 @@ async function cariTesti() {
     if (hasil.length) { nomor.push(...hasil); kosong = 0; }
     else { kosong += CH; if (kosong >= GAP) break; }
   }
-  nomor.sort((a, b) => b - a);   /* terbaru (nomor terbesar) duluan */
+  return nomor;
+}
+
+async function cariTesti() {
+  try {
+    const c = JSON.parse(localStorage.getItem("testi_cache2") || "null");
+    if (c && c.d && c.d.length && Date.now() - c.t < 2 * 60 * 1000) {
+      Object.assign(namaFile, c.f || {});
+      return c.d;
+    }
+  } catch (e) {}
+
+  let nomor;
+  try { nomor = await dariGitHub(); } catch (e) { nomor = await pindai(); }
+  nomor = [...new Set(nomor)].sort((a, b) => b - a);   /* terbaru (nomor terbesar) duluan */
+
   if (nomor.length) {
-    try { localStorage.setItem("testi_cache", JSON.stringify({ t: Date.now(), d: nomor })); } catch (e) {}
+    try { localStorage.setItem("testi_cache2", JSON.stringify({ t: Date.now(), d: nomor, f: namaFile })); } catch (e) {}
   }
   return nomor;
 }
